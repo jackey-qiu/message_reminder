@@ -1,0 +1,12 @@
+{
+  "type": "service_account",
+  "project_id": "worship-arrangement-dd",
+  "private_key_id": "1005ad7eaf1f23ee853a546bdc26bfe2af03f63c",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEuwIBADANBgkqhkiG9w0BAQEFAASCBKUwggShAgEAAoIBAQCni0Pq0IDud94L\nuxCgNAynf6q4ikPNbiBZk69JrLlSDx3Mw0ng+8DxlL818ZyiRxqDoPxPqcg0XU/r\n1CZslOKNC7V+P5NRR0fn7LWFNh9Yr2BMZkzpwEpNUTQEAdeIWwIV4QfYTWrZ5eva\nN97vJ/csVI7dAJxPbkeY2b6fQlZKlfHq44mlO4DAT9+Kbt7WCB98GqscFTBwdLoX\nB48XyNHP1Vn2iVEyYzlyTDr255kL3L6wV9YiB26DpE0mo4cYgE5R4YGSpehDR0Zi\ng4+uHuAB9oeeu6bap25y2DEXh2yZoaH2LmbW7XLF8nxIBuOCfcn43Rr9hm5tTSq3\nL6HDRkL1AgMBAAECgf8gnSYbZNBe8KEd/MwVDgy945wtUBI4FbfhDV6RzjhE66xh\nWk0x/npl4blW8Ya2ustD1D1JRJje7fXLclYId52iLHqn7g2UmiDlL1l7v41ai3Oz\na4vin2Esq8ye+xIkTj2Zr18CPA+7Wtu5HtHGvCuL9ZSEcMSnXFA+RiSqhmnwb+7b\nOSH4V1UOPwI8edOoJK78hDIAm40y/e+gdfY4CVKCa2Scp7S2GRcvjVGJUXlG4d63\nRS0GNDKmR7gqPETNdCP+9zizrNnoZUpwVU+c39QYlin3Kd7Xt0DUJvaftlp4vgns\nlb2lUA3xXGt1Zp/BeVbwy6RDR3hGsLW5I1xA8qcCgYEA4uCQ8ucLc1n+CvBINrJp\nmGfczv2KngDO7KRf8yixOT07enzEzpOX7qlTm/FvGHR0W3TrOZgvDYWETsGLYwzA\npkeHNCk6JG0HAo8BfLJLg/J1FGIk+FaHBpMxqH4BcxFnv51QWmuLMCpc1VPy5HRv\nwFFAnVPImB1jLSLDaFDJhG8CgYEAvQzx5WAkOZhunC8042P8rBXIfCFEFmzbDDId\nTs9sJZuiFGXUAE9R4AQr+Hd/TLtAP5+778nSGdNtuVNYsfpWoyl8SfuA5ah2CnSw\nvMk2+puAHVm6oMkIy9GUw/iDhduj/3VXoseTvyeTyiCqQr7IMlWUXNQZ92tYgru7\na6lpiNsCgYEAyps9Fo6aPTMamW4nLyF5B2+JUxg82AlkwROx1BZ83d7+5M3Te592\nyN1SGysqyS4GUz5AajirnGml1CcncRcMW/H4ne5LTAhJgFFxRIh8w6KcR821skij\nYI3GhO+yH65ldkroXTc5H5RVPvUvLjGFMrvc9iLCOoXT8ZTf6KJss+UCgYBi+8Yj\nvST6aw9vA2CDtrRzPayNIbXOsAw45Hxn6T7MqiJA39gSmXVa/5QuMhMbD+fh6Da0\npE03bHZE1JjaByMZpv0Gl4KzvHKhottu3UPGD2kS9Qo8aUYLwZ5MxW/HxGqntL6/\n4hM/wO8mo9fBvrZ/dEOMHxnBbBkZykWlZzx0hQKBgAOiFWhk3M7DKXHm+GF1D3Un\nvHCkU/CCQlNsrVHi56No7f3yf9z/vj7uimtYPELWVDAEmpW0QAlaZHMtEgXPVT2j\nTjH4MYKlZWkes11tTsI0dxPdgKOUQgxRWdf2WPrAJy0ph0APCoScLh7hzFZcmndU\ngUBE9nXUko1zyZwWFqIA\n-----END PRIVATE KEY-----\n",
+  "client_email": "dd2-908@worship-arrangement-dd.iam.gserviceaccount.com",
+  "client_id": "110405542477441015604",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://accounts.google.com/o/oauth2/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/dd2-908%40worship-arrangement-dd.iam.gserviceaccount.com"
+}
