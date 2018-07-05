@@ -10,8 +10,12 @@ from access_google_sheet import from_google_sheet_to_txt
 #credential file for Google sheet API
 jason_credential_file="Worship-arrangement-DD-1005ad7eaf1f.json"
 
-debug=True
-update_g_sheets=1
+debug=raw_input("Do you want to run program in a test mode?Type 'y' for yes or 'n' for no: ")
+if debug=='y':
+    debug=True
+else:
+    debug=False
+    
 if not debug:
     bot=Bot()
 if not debug:
@@ -22,6 +26,7 @@ else:
     password_of_your_email=" "
 send_message_Sunday=raw_input("Send message reminder for Sunday?Type 'y' for yes or 'n' for no: ")
 send_message_Friday=raw_input("Send message reminder for Friday bible study?Type 'y' for yes or 'n' for no: ")
+update_g_sheets=raw_input("Do you want to update fushibiao from Google Sheet?Type 'y' for yes or 'n' for no: ")
 if send_message_Sunday=='y':
     send_message_Sunday=True
 else:
@@ -30,6 +35,10 @@ if send_message_Friday=='y':
     send_message_Friday=True
 else:
     send_message_Friday=False
+if update_g_sheets=='y':
+    update_g_sheets=True
+else:
+    update_g_sheets=False
 
 send_wechat_msg=True
 #text file of worship service schedule.
@@ -49,6 +58,7 @@ if update_g_sheets:
     print "fushibiao_friday.txt is updated."
 else:
     pass
+
 """
 print "Updating wechat_db.txt from google sheet"
 from_google_sheet_to_txt(g_file_name="fushibiao_info_all",save_file="wechat.txt",sheet_tag="wechat",jason_credential_file=jason_credential_file)
@@ -58,6 +68,7 @@ print "Updating email_db.txt from google sheet"
 from_google_sheet_to_txt(g_file_name="fushibiao_info_all",save_file="email.txt",sheet_tag="email",jason_credential_file=jason_credential_file)
 print "email_db.txt is updated."
 """
+
 #Taihe's email address
 taihe_email_address="wilfredwongtaiwoo@hotmail.com"
 taihe_wechat="泰禾"
