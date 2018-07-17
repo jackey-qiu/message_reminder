@@ -15,7 +15,7 @@ if debug=='y':
     debug=True
 else:
     debug=False
-    
+
 if not debug:
     bot=Bot()
 if not debug:
@@ -157,7 +157,8 @@ for each in people_next_task_friday:
         TO_friday.append(email_lib[each])
         if each!="无":
             TO_friday_wechat.append(wechat_lib[each])
-
+TO_wechat.append(wechat_lib["蔡师母"])
+TO_friday_wechat.append(wechat_lib["蔡师母"])
 #subject and body
 SUBJECT = "周末敬拜（%s）服侍提醒!"%(weekend_date.isoformat())
 SUBJECT_friday = "周五查经（%s）服侍提醒!"%(friday_date.isoformat())
