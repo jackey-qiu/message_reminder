@@ -157,16 +157,18 @@ for each in people_next_task_friday:
         TO_friday.append(email_lib[each])
         if each!="无":
             TO_friday_wechat.append(wechat_lib[each])
-TO_wechat.append(wechat_lib["蔡师母"])
-TO_friday_wechat.append(wechat_lib["蔡师母"])
+if wechat_lib["蔡师母"] not in TO_wechat:
+    TO_wechat.append(wechat_lib["蔡师母"])
+if wechat_lib["蔡师母"] not in TO_friday_wechat:
+    TO_friday_wechat.append(wechat_lib["蔡师母"])
 #subject and body
 SUBJECT = "周末敬拜（%s）服侍提醒!"%(weekend_date.isoformat())
 SUBJECT_friday = "周五查经（%s）服侍提醒!"%(friday_date.isoformat())
 
-TEXT_friday = """Hi all,
+TEXT_friday = """大家好,
 
-Please note that this Friday you have service for Bible study as follows:
-The chapter we will study:%s
+请注意你在这周五查经中有服侍任务:
+经文学习:%s
 领诗:%s
 司乐:%s
 带查经:%s and %s
@@ -179,9 +181,9 @@ Thanks,
 
 蔡师母"""%(learn_chapter,lingshi_friday,siyue_friday,leader_friday[0],leader_friday[1],chadian_friday,clean_up)
 
-TEXT = """Hi all,
+TEXT = """大家好,
 
-Please note that this Sunday you have workship service as follows:
+请注意你在这周末主日崇拜中有服侍任务:
 司会:%s
 圣餐:%s
 领诗:%s
@@ -201,7 +203,7 @@ Thanks,
 
 TEXT_to_taihe = """Hi 泰禾,
 
-Please note the people assigned to do workship service for the following two weekends are as follows:
+下两周的服侍安排如下:
 Date:%s
 司会:%s
 圣餐:%s
@@ -257,11 +259,17 @@ if not debug:
     server.starttls()
     server.login(username,password)
     if send_message_Sunday:
-        server.sendmail(FROM, TO+["amyclwong@gmail.com","crqiu2@gmail.com"], message)
-        server.sendmail(FROM, [taihe_email_address]+["amyclwong@gmail.com","crqiu2@gmail.com"], message_to_taihe)
+        if "amyclwong@gmail.com" in TO:
+            server.sendmail(FROM, TO, message)
+        else:
+            server.sendmail(FROM, TO+["amyclwong@gmail.com"], message)
+        server.sendmail(FROM, [taihe_email_address]+["amyclwong@gmail.com"], message_to_taihe)
         print ("The reminder e-mails of weekend workship service were sent !")
     if send_message_Friday:
-        server.sendmail(FROM, TO_friday+["amyclwong@gmail.com","crqiu2@gmail.com"], message_friday)
+        if "amyclwong@gmail.com" in TO_friday:
+            server.sendmail(FROM, TO_friday, message_friday)
+        else:
+            server.sendmail(FROM, TO_friday+["amyclwong@gmail.com"], message_friday)
         print ("The reminder e-mails of Friday Bible study workship service were sent !")
     server.quit()
 if debug:
