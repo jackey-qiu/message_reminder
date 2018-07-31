@@ -9,6 +9,7 @@ from email.mime.text import MIMEText
 from wxpy import *
 import getpass
 from access_google_sheet import from_google_sheet_to_txt
+from docx import Document
 
 jason_credential_file="Worship-arrangement-DD-1005ad7eaf1f.json"#credential file for Google sheet API
 debug=raw_input("Do you want to run program in a test mode? [y] or n: ") or "y"
@@ -109,11 +110,11 @@ for i in range(len(task_all[1:])):#skip the first label row
             break
         elif items[0].split('/')[1:]==[str(which_month),str(which_year)]:
             date_temp=items[0][0:-5].split("/")
-            people_one_month_sunday.append(['{0}月{1}日'.format(date_temp[1],date_temp[0])]+items[1:])
+            people_one_month_sunday.append(['{0}日'.format(date_temp[0])]+items[1:])
     else:
         if items[0].split('/')[1:]==[str(which_month),str(which_year)]:
             date_temp=items[0][0:-5].split("/")
-            people_one_month_sunday.append(['{0}月{1}日'.format(date_temp[1],date_temp[0])]+items[1:])
+            people_one_month_sunday.append(['{0}日'.format(date_temp[0])]+items[1:])
         else:
             pass
 
@@ -127,11 +128,11 @@ for each in task_all_friday[1:]:#skip the first row of labelling
             break
         elif items[0].split('/')[1:]==[str(which_month),str(which_year)]:
             date_temp=items[0][0:-5].split("/")
-            people_one_month_Friday.append(['{0}月{1}日'.format(date_temp[1],date_temp[0])]+items[1:8])
+            people_one_month_Friday.append(['{0}日'.format(date_temp[0])]+items[1:8])
     else:
         if items[0].split('/')[1:]==[str(which_month),str(which_year)]:
             date_temp=items[0][0:-5].split("/")
-            people_one_month_Friday.append(['{0}月{1}日'.format(date_temp[1],date_temp[0])]+items[1:8])
+            people_one_month_Friday.append(['{0}日'.format(date_temp[0])]+items[1:8])
         else:
             pass
 if people_one_month_sunday!=[]:
@@ -314,11 +315,14 @@ if send_wechat_msg and (not debug):
             text_file.write("\n")
             text_file.write('{0}月周五查经服侍表\n'.format(which_month))
             text_file.write(people_one_month_Friday)
+        document = Document()
+        p = document.add_paragraph('{0}月主日崇拜服侍表\n'.format(which_month).decode("utf8"))
+        p = document.add_paragraph(people_one_month_sunday.decode("utf8"))
+        p = document.add_paragraph('{0}月周五查经服侍表\n'.format(which_month).decode("utf8"))
+        p = document.add_paragraph(people_one_month_Friday.decode("utf8"))
+        document.save('month_task.docx')
         temp_group.send_msg('{0}月主日崇拜和周五查经服侍表'.format(which_month).decode("utf8"))
-        temp_group.send_file("month_task.txt")
-        #temp_group.send_msg(people_one_month_sunday.decode("utf8"))
-        #temp_group.send_msg('{0}月周五查经服侍表'.format(which_month).decode("utf8"))
-        #temp_group.send_msg(people_one_month_Friday.decode("utf8"))
+        temp_group.send_file("month_task.docx")
         temp_group.send_msg("有需要调整的服侍人员，请联系蔡师母！".decode("utf8"))
     if send_message_Sunday:
         temp_group=bot.search("基督徒团契".decode("utf8"))[0]
@@ -367,3 +371,9 @@ if debug:
             text_file.write("\n")
             text_file.write('{0}月周五查经服侍表\n'.format(which_month))
             text_file.write(people_one_month_Friday)
+        document = Document()
+        p = document.add_paragraph('{0}月主日崇拜服侍表\n'.format(which_month).decode("utf8"))
+        p = document.add_paragraph(people_one_month_sunday.decode("utf8"))
+        p = document.add_paragraph('{0}月周五查经服侍表\n'.format(which_month).decode("utf8"))
+        p = document.add_paragraph(people_one_month_Friday.decode("utf8"))
+        document.save('month_task.docx')
