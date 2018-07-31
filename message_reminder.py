@@ -1,21 +1,26 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import datetime
+import pandas as pd
+import numpy as np
 import calendar
 import smtplib
 from email.mime.text import MIMEText
 from wxpy import *
 import getpass
 from access_google_sheet import from_google_sheet_to_txt
+
 #credential file for Google sheet API
 jason_credential_file="Worship-arrangement-DD-1005ad7eaf1f.json"
 
 debug=raw_input("Do you want to run program in a test mode?Type 'y' for yes or 'n' for no: ")
-if debug=='y':
-    debug=True
-else:
-    debug=False
-
+debug = debug=='y'
+send_month_task=raw_input("Do you want to send worship service for one month?Type 'y' for yes or 'n' for no: ")
+send_month_task = send_month_task=="y"
+which_month,which_year=None,None
+if send_month_task:
+    which_month_year_to_send=raw_input("Which month (1-12) of which year(eg. 2018)? eg type '8,2018' means Auguest in 2018:")
+    which_month,which_year=map(int,which_month_year_to_send.rsplit(","))
 if not debug:
     bot=Bot()
 if not debug:
@@ -27,18 +32,9 @@ else:
 send_message_Sunday=raw_input("Send message reminder for Sunday?Type 'y' for yes or 'n' for no: ")
 send_message_Friday=raw_input("Send message reminder for Friday bible study?Type 'y' for yes or 'n' for no: ")
 update_g_sheets=raw_input("Do you want to update fushibiao from Google Sheet?Type 'y' for yes or 'n' for no: ")
-if send_message_Sunday=='y':
-    send_message_Sunday=True
-else:
-    send_message_Sunday=False
-if send_message_Friday=='y':
-    send_message_Friday=True
-else:
-    send_message_Friday=False
-if update_g_sheets=='y':
-    update_g_sheets=True
-else:
-    update_g_sheets=False
+send_message_Sunday = send_message_Sunday=='y'
+send_message_Friday = send_message_Friday=='y'
+update_g_sheets = update_g_sheets=='y'
 
 send_wechat_msg=True
 #text file of worship service schedule.
@@ -104,7 +100,8 @@ people_next_task=[]
 people_next1_task=[]
 people_next2_task=[]
 people_next_task_friday=[]
-
+people_one_month_sunday=[]
+people_one_month_Friday=[]
 #date formate like this dd/mm/year, e.g. 4/5/2018 represents May 4th in 2018. 04/05/2018 will not be reconized! Remove redundant 0 from the month and day.
 
 for i in range(len(task_all[1:])):#skip the first label row
@@ -114,9 +111,14 @@ for i in range(len(task_all[1:])):#skip the first label row
         people_next_task=items[1:]
         people_next1_task=task_all[1:][i+1].rstrip().rsplit()[1:]
         people_next2_task=task_all[1:][i+2].rstrip().rsplit()[1:]
-        break
+        if not send_month_task:
+            break
     else:
-        pass
+        if items[0].split('/')[1:]==[str(which_month),str(which_year)]:
+            date_temp=items[0][0:-5].split("/")
+            people_one_month_sunday.append(['{0}月{1}日'.format(date_temp[1],date_temp[0])]+items[1:])
+        else:
+            pass
 
 bible_study_learn_chapter=None
 for each in task_all_friday[1:]:#skip the first row of labelling
@@ -124,9 +126,60 @@ for each in task_all_friday[1:]:#skip the first row of labelling
     if items[0].split('/')==[str(friday_date_day),str(friday_date_month),str(friday_date_year)]:
         people_next_task_friday=items[1:5]+items[6:8]
         bible_study_learn_chapter=items[5]
-        break
+        if not send_month_task:
+            break
     else:
-        pass
+        if items[0].split('/')[1:]==[str(which_month),str(which_year)]:
+            date_temp=items[0][0:-5].split("/")
+            people_one_month_Friday.append(['{0}月{1}日'.format(date_temp[1],date_temp[0])]+items[1:8])
+        else:
+            pass
+if people_one_month_sunday!=[]:
+    temp=np.array(people_one_month_sunday).transpose()
+    index=np.array(['日期','领诗','司乐','音控','司会','圣餐','讲道','茶点','打扫','接待','儿童','助手'])[:,np.newaxis]
+    people_one_month_sunday=np.append(index,temp,axis=1)
+    column_num=people_one_month_sunday.shape[1]
+    #print "column number=",column_num
+    #print people_one_month_sunday[0,:]
+    people_one_month_sunday_formated=''
+    if column_num==6:
+        for each in people_one_month_sunday:
+            people_one_month_sunday_formated+='{:15}{:15}{:15}{:15}{:15}{:15}\n'.format(each[0],each[1],each[2],each[3],each[4],each[5])
+    elif column_num==5:
+        for each in people_one_month_sunday:
+            people_one_month_sunday_formated+='{:15}{:15}{:15}{:15}{:15}\n'.format(each[0],each[1],each[2],each[3],each[4])
+    elif column_num==4:
+        for each in people_one_month_sunday:
+            people_one_month_sunday_formated+='{:15}{:15}{:15}{:15}\n'.format(each[0],each[1],each[2],each[3])
+    elif column_num==3:
+        for each in people_one_month_sunday:
+            people_one_month_sunday_formated+='{:15}{:15}{:15}\n'.format(each[0],each[1],each[2])
+    elif column_num==2:
+        for each in people_one_month_sunday:
+            people_one_month_sunday_formated+='{:15}{:15}\n'.format(each[0],each[1])
+    people_one_month_sunday=people_one_month_sunday_formated
+if people_one_month_Friday!=[]:
+    temp=np.array(people_one_month_Friday).transpose()
+    index=np.array(['日期','领诗','司乐','带领1','带领2','经文','茶点','打扫'])[:,np.newaxis]
+    people_one_month_Friday=np.append(index,temp,axis=1)
+    column_num=people_one_month_Friday.shape[1]
+    people_one_month_Friday_formated=''
+    if column_num==6:
+        for each in people_one_month_Friday:
+            people_one_month_Friday_formated+='{:15}{:15}{:15}{:15}{:15}{:15}\n'.format(each[0],each[1],each[2],each[3],each[4],each[5])
+    if column_num==5:
+        for each in people_one_month_Friday:
+            people_one_month_Friday_formated+='{:15}{:15}{:15}{:15}{:15}\n'.format(each[0],each[1],each[2],each[3],each[4])
+    if column_num==4:
+        for each in people_one_month_Friday:
+            people_one_month_Friday_formated+='{:15}{:15}{:15}{:15}\n'.format(each[0],each[1],each[2],each[3])
+    elif column_num==3:
+        for each in people_one_month_Friday:
+            people_one_month_Friday_formated+='{:15}{:15}{:15}\n'.format(each[0],each[1],each[2])
+    elif column_num==2:
+        for each in people_one_month_Friday:
+            people_one_month_Friday_formated+='{:15}{:15}\n'.format(each[0],each[1])
+    people_one_month_Friday=people_one_month_Friday_formated
 #function to extract personal info for Sunday
 extract_info=lambda info_list:[info_list[3],info_list[4],info_list[0],info_list[5],info_list[1],info_list[2],info_list[6],info_list[7],info_list[8],info_list[9],info_list[10]]
 
@@ -259,18 +312,24 @@ if not debug:
     server.starttls()
     server.login(username,password)
     if send_message_Sunday:
-        if "amyclwong@gmail.com" in TO:
-            server.sendmail(FROM, TO, message)
-        else:
-            server.sendmail(FROM, TO+["amyclwong@gmail.com"], message)
-        server.sendmail(FROM, [taihe_email_address]+["amyclwong@gmail.com"], message_to_taihe)
-        print ("The reminder e-mails of weekend workship service were sent !")
+        try:
+            if "amyclwong@gmail.com" in TO:
+                server.sendmail(FROM, TO, message)
+            else:
+                server.sendmail(FROM, TO+["amyclwong@gmail.com"], message)
+            server.sendmail(FROM, [taihe_email_address]+["amyclwong@gmail.com"], message_to_taihe)
+            print ("The reminder e-mails of weekend workship service were sent !")
+        except:
+            print ("Failure to send the reminder e-mails of weekend workship service!")
     if send_message_Friday:
-        if "amyclwong@gmail.com" in TO_friday:
-            server.sendmail(FROM, TO_friday, message_friday)
-        else:
-            server.sendmail(FROM, TO_friday+["amyclwong@gmail.com"], message_friday)
-        print ("The reminder e-mails of Friday Bible study workship service were sent !")
+        try:
+            if "amyclwong@gmail.com" in TO_friday:
+                server.sendmail(FROM, TO_friday, message_friday)
+            else:
+                server.sendmail(FROM, TO_friday+["amyclwong@gmail.com"], message_friday)
+            print ("The reminder e-mails of Friday Bible study workship service were sent !")
+        except:
+            print ("Failure to send the reminder e-mails of Friday Bible study workship service!")
     server.quit()
 if debug:
     if send_message_Sunday:
@@ -279,7 +338,32 @@ if debug:
         print(message_to_taihe)
     if send_message_Friday:
         print(message_friday)
+    if send_month_task:
+        print '{0}月主日崇拜服侍表'.format(which_month).decode("utf8")
+        print(people_one_month_sunday.decode("utf8"))
+        print '{0}月周五查经服侍表'.format(which_month).decode("utf8")
+        print(people_one_month_Friday.decode("utf8"))
+        with open("month_task.txt","w") as text_file:
+            text_file.write('{0}月主日崇拜服侍表\n'.format(which_month))
+            text_file.write(people_one_month_sunday)
+            text_file.write("\n")
+            text_file.write('{0}月周五查经服侍表\n'.format(which_month))
+            text_file.write(people_one_month_Friday)
 if send_wechat_msg and (not debug):
+    if send_month_task:
+        temp_group=bot.search("基督徒团契".decode("utf8"))[0]
+        with open("month_task.txt","w") as text_file:
+            text_file.write('{0}月主日崇拜服侍表\n'.format(which_month))
+            text_file.write(people_one_month_sunday)
+            text_file.write("\n")
+            text_file.write('{0}月周五查经服侍表\n'.format(which_month))
+            text_file.write(people_one_month_Friday)
+        temp_group.send_msg('{0}月主日崇拜和周五查经服侍表'.format(which_month).decode("utf8"))
+        temp_group.send_file("month_task.txt")
+        #temp_group.send_msg(people_one_month_sunday.decode("utf8"))
+        #temp_group.send_msg('{0}月周五查经服侍表'.format(which_month).decode("utf8"))
+        #temp_group.send_msg(people_one_month_Friday.decode("utf8"))
+        temp_group.send_msg("有需要调整的服侍人员，请联系蔡师母！".decode("utf8"))
     if send_message_Sunday:
         for each in TO_wechat:
             try:
