@@ -13,25 +13,25 @@ from access_google_sheet import from_google_sheet_to_txt
 #credential file for Google sheet API
 jason_credential_file="Worship-arrangement-DD-1005ad7eaf1f.json"
 
-debug=raw_input("Do you want to run program in a test mode?Type 'y' for yes or 'n' for no: ")
+debug=raw_input("Do you want to run program in a test mode? [y] or n: ") or "y"
 debug = debug=='y'
-send_month_task=raw_input("Do you want to send worship service for one month?Type 'y' for yes or 'n' for no: ")
+send_month_task=raw_input("Do you want to send worship service for one month?[y] or n: ") or "y"
 send_month_task = send_month_task=="y"
 which_month,which_year=None,None
 if send_month_task:
-    which_month_year_to_send=raw_input("Which month (1-12) of which year(eg. 2018)? eg type '8,2018' means Auguest in 2018:")
+    which_month_year_to_send=raw_input("Which month (1-12) of which year(eg. 2018)? eg type '8,2018' means Auguest in 2018:") or "8,2018"
     which_month,which_year=map(int,which_month_year_to_send.rsplit(","))
 if not debug:
     bot=Bot()
 if not debug:
-    email_address_sender=raw_input("What's your gmail address: ")
+    email_address_sender=raw_input("What's your gmail address: ") or "crqiu2@gmail.com"
     password_of_your_email=getpass.getpass("What's the password of your gmail: ")
 else:
     email_address_sender=" "
     password_of_your_email=" "
-send_message_Sunday=raw_input("Send message reminder for Sunday?Type 'y' for yes or 'n' for no: ")
-send_message_Friday=raw_input("Send message reminder for Friday bible study?Type 'y' for yes or 'n' for no: ")
-update_g_sheets=raw_input("Do you want to update fushibiao from Google Sheet?Type 'y' for yes or 'n' for no: ")
+send_message_Sunday=raw_input("Send message reminder for Sunday?[y] or n: ") or "y"
+send_message_Friday=raw_input("Send message reminder for Friday bible study?[y] or n: ") or "y"
+update_g_sheets=raw_input("Do you want to update fushibiao from Google Sheet?[y] or n: ") or "y"
 send_message_Sunday = send_message_Sunday=='y'
 send_message_Friday = send_message_Friday=='y'
 update_g_sheets = update_g_sheets=='y'
@@ -113,6 +113,9 @@ for i in range(len(task_all[1:])):#skip the first label row
         people_next2_task=task_all[1:][i+2].rstrip().rsplit()[1:]
         if not send_month_task:
             break
+        elif items[0].split('/')[1:]==[str(which_month),str(which_year)]:
+            date_temp=items[0][0:-5].split("/")
+            people_one_month_sunday.append(['{0}月{1}日'.format(date_temp[1],date_temp[0])]+items[1:])
     else:
         if items[0].split('/')[1:]==[str(which_month),str(which_year)]:
             date_temp=items[0][0:-5].split("/")
@@ -128,6 +131,9 @@ for each in task_all_friday[1:]:#skip the first row of labelling
         bible_study_learn_chapter=items[5]
         if not send_month_task:
             break
+        elif items[0].split('/')[1:]==[str(which_month),str(which_year)]:
+            date_temp=items[0][0:-5].split("/")
+            people_one_month_Friday.append(['{0}月{1}日'.format(date_temp[1],date_temp[0])]+items[1:8])
     else:
         if items[0].split('/')[1:]==[str(which_month),str(which_year)]:
             date_temp=items[0][0:-5].split("/")
@@ -138,47 +144,19 @@ if people_one_month_sunday!=[]:
     temp=np.array(people_one_month_sunday).transpose()
     index=np.array(['日期','领诗','司乐','音控','司会','圣餐','讲道','茶点','打扫','接待','儿童','助手'])[:,np.newaxis]
     people_one_month_sunday=np.append(index,temp,axis=1)
-    column_num=people_one_month_sunday.shape[1]
-    #print "column number=",column_num
-    #print people_one_month_sunday[0,:]
     people_one_month_sunday_formated=''
-    if column_num==6:
-        for each in people_one_month_sunday:
-            people_one_month_sunday_formated+='{:15}{:15}{:15}{:15}{:15}{:15}\n'.format(each[0],each[1],each[2],each[3],each[4],each[5])
-    elif column_num==5:
-        for each in people_one_month_sunday:
-            people_one_month_sunday_formated+='{:15}{:15}{:15}{:15}{:15}\n'.format(each[0],each[1],each[2],each[3],each[4])
-    elif column_num==4:
-        for each in people_one_month_sunday:
-            people_one_month_sunday_formated+='{:15}{:15}{:15}{:15}\n'.format(each[0],each[1],each[2],each[3])
-    elif column_num==3:
-        for each in people_one_month_sunday:
-            people_one_month_sunday_formated+='{:15}{:15}{:15}\n'.format(each[0],each[1],each[2])
-    elif column_num==2:
-        for each in people_one_month_sunday:
-            people_one_month_sunday_formated+='{:15}{:15}\n'.format(each[0],each[1])
+    exec("f_format=\'"+"{:15}"*people_one_month_sunday.shape[1]+"\\n\'"+".format")
+    for each in people_one_month_sunday:
+        people_one_month_sunday_formated+=f_format(*each)
     people_one_month_sunday=people_one_month_sunday_formated
 if people_one_month_Friday!=[]:
     temp=np.array(people_one_month_Friday).transpose()
     index=np.array(['日期','领诗','司乐','带领1','带领2','经文','茶点','打扫'])[:,np.newaxis]
     people_one_month_Friday=np.append(index,temp,axis=1)
-    column_num=people_one_month_Friday.shape[1]
     people_one_month_Friday_formated=''
-    if column_num==6:
-        for each in people_one_month_Friday:
-            people_one_month_Friday_formated+='{:15}{:15}{:15}{:15}{:15}{:15}\n'.format(each[0],each[1],each[2],each[3],each[4],each[5])
-    if column_num==5:
-        for each in people_one_month_Friday:
-            people_one_month_Friday_formated+='{:15}{:15}{:15}{:15}{:15}\n'.format(each[0],each[1],each[2],each[3],each[4])
-    if column_num==4:
-        for each in people_one_month_Friday:
-            people_one_month_Friday_formated+='{:15}{:15}{:15}{:15}\n'.format(each[0],each[1],each[2],each[3])
-    elif column_num==3:
-        for each in people_one_month_Friday:
-            people_one_month_Friday_formated+='{:15}{:15}{:15}\n'.format(each[0],each[1],each[2])
-    elif column_num==2:
-        for each in people_one_month_Friday:
-            people_one_month_Friday_formated+='{:15}{:15}\n'.format(each[0],each[1])
+    exec("f_format=\'"+"{:15}"*people_one_month_Friday.shape[1]+"\\n\'"+".format")
+    for each in people_one_month_Friday:
+        people_one_month_Friday_formated+=f_format(*each)
     people_one_month_Friday=people_one_month_Friday_formated
 #function to extract personal info for Sunday
 extract_info=lambda info_list:[info_list[3],info_list[4],info_list[0],info_list[5],info_list[1],info_list[2],info_list[6],info_list[7],info_list[8],info_list[9],info_list[10]]
