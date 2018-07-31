@@ -10,9 +10,7 @@ from wxpy import *
 import getpass
 from access_google_sheet import from_google_sheet_to_txt
 
-#credential file for Google sheet API
-jason_credential_file="Worship-arrangement-DD-1005ad7eaf1f.json"
-
+jason_credential_file="Worship-arrangement-DD-1005ad7eaf1f.json"#credential file for Google sheet API
 debug=raw_input("Do you want to run program in a test mode? [y] or n: ") or "y"
 debug = debug=='y'
 send_month_task=raw_input("Do you want to send worship service for one month?[y] or n: ") or "y"
@@ -35,10 +33,10 @@ update_g_sheets=raw_input("Do you want to update fushibiao from Google Sheet?[y]
 send_message_Sunday = send_message_Sunday=='y'
 send_message_Friday = send_message_Friday=='y'
 update_g_sheets = update_g_sheets=='y'
-
 send_wechat_msg=True
+
 #text file of worship service schedule.
-fushibiao='fushibiao.txt'#make sure the name for fushibiao on google sheet is fushibiao, ie without the extension .txt. The same for the following txt files.
+fushibiao='fushibiao.txt'
 fushibiao_friday="fushibiao_bible_study.txt"
 #text file of Email corresponding of each person
 email_db='email.txt'
@@ -46,24 +44,20 @@ wechat_db='wechat.txt'
 if update_g_sheets:
     #now update these information from google spreadsheet
     print "Updating fushibiao.txt from google sheet"
-    from_google_sheet_to_txt(g_file_name="fushibiao_info_all",save_file="fushibiao.txt",sheet_tag="sunday",jason_credential_file=jason_credential_file)
-    print "fushibiao.txt is updated."
+    try:
+        from_google_sheet_to_txt(g_file_name="fushibiao_info_all",save_file="fushibiao.txt",sheet_tag="sunday",jason_credential_file=jason_credential_file)
+        print "fushibiao.txt is updated."
+    except:
+        print "Unable to download the google sheet for Sunday."
 
     print "Updating fushibiao_friday.txt from google sheet"
-    from_google_sheet_to_txt(g_file_name="fushibiao_info_all",save_file="fushibiao_bible_study.txt",sheet_tag="friday",jason_credential_file=jason_credential_file)
-    print "fushibiao_friday.txt is updated."
+    try:
+        from_google_sheet_to_txt(g_file_name="fushibiao_info_all",save_file="fushibiao_bible_study.txt",sheet_tag="friday",jason_credential_file=jason_credential_file)
+        print "fushibiao_friday.txt is updated."
+    except:
+        print "Unable to download the google sheet for Friday."
 else:
     pass
-
-"""
-print "Updating wechat_db.txt from google sheet"
-from_google_sheet_to_txt(g_file_name="fushibiao_info_all",save_file="wechat.txt",sheet_tag="wechat",jason_credential_file=jason_credential_file)
-print "wechat_db.txt is updated."
-
-print "Updating email_db.txt from google sheet"
-from_google_sheet_to_txt(g_file_name="fushibiao_info_all",save_file="email.txt",sheet_tag="email",jason_credential_file=jason_credential_file)
-print "email_db.txt is updated."
-"""
 
 #Taihe's email address
 taihe_email_address="wilfredwongtaiwoo@hotmail.com"
