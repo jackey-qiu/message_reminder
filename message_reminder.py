@@ -170,7 +170,6 @@ chadian_friday=people_next_task_friday[4]
 clean_up=people_next_task_friday[5]
 
 #email address being sent from
-#FROM = "andrewsfchai@gmail.com"
 FROM = email_address_sender
 #email adresses to send to
 TO=[]
@@ -263,8 +262,6 @@ Thanks,
 
 蔡师母"""%tuple([next_weekend_date.isoformat()]+extract_info(people_next1_task)+[next_next_weekend_date.isoformat()]+extract_info(people_next2_task))
 
-if debug:
-    print "Now running this program in debug mode! That means not sending message to anyone, but just display the message on screen!"
 # Prepare actual message
 message = """Subject: %s From: %s To: %s
 
@@ -312,7 +309,53 @@ if not debug:
         except:
             print ("Failure to send the reminder e-mails of Friday Bible study workship service!")
     server.quit()
+
+#send wechat message
+if send_wechat_msg and (not debug):
+    if send_month_task:
+        temp_group=bot.search("基督徒团契".decode("utf8"))[0]
+        with open("month_task.txt","w") as text_file:
+            text_file.write('{0}月主日崇拜服侍表\n'.format(which_month))
+            text_file.write(people_one_month_sunday)
+            text_file.write("\n")
+            text_file.write('{0}月周五查经服侍表\n'.format(which_month))
+            text_file.write(people_one_month_Friday)
+        temp_group.send_msg('{0}月主日崇拜和周五查经服侍表'.format(which_month).decode("utf8"))
+        temp_group.send_file("month_task.txt")
+        #temp_group.send_msg(people_one_month_sunday.decode("utf8"))
+        #temp_group.send_msg('{0}月周五查经服侍表'.format(which_month).decode("utf8"))
+        #temp_group.send_msg(people_one_month_Friday.decode("utf8"))
+        temp_group.send_msg("有需要调整的服侍人员，请联系蔡师母！".decode("utf8"))
+    if send_message_Sunday:
+        temp_group=bot.search("基督徒团契".decode("utf8"))[0]
+        temp_group.send_msg(TEXT.decode("utf8"))
+        for each in TO_wechat:
+            try:
+                temp_friend=bot.search(each.decode("utf8"))[0]
+                temp_friend.send_msg(TEXT.decode("utf8"))
+                print "Sunday worship reminder Message to %s is sent via Wechat!"%(each.decode("utf8"))
+            except:
+                print "Failure to send Sunday worship reminder message to %s via Wechat!"%(each.decode("utf8"))
+        #wechat message to Taihe
+        try:
+            temp_friend=bot.search(taihe_wechat.decode("utf8"))[0]
+            temp_friend.send_msg(TEXT_to_taihe.decode("utf8"))
+            print "Message to %s is sent via Wechat!"%(taihe_wechat)
+        except:
+            print "Failure to send Message to %s via Wechat!"%(taihe_wechat)
+    if send_message_Friday:
+        temp_group=bot.search("基督徒团契".decode("utf8"))[0]
+        temp_group.send_msg(TEXT_friday.decode("utf8"))
+        for each in TO_friday_wechat:
+            try:
+                temp_friend=bot.search(each.decode("utf8"))[0]
+                temp_friend.send_msg(TEXT_friday.decode("utf8"))
+                print "Friday bible study reminder Message to %s is sent via Wechat!"%(each.decode("utf8"))
+            except:
+                print "Failure to send Friday bible study reminder message to %s via Wechat!"%(each.decode("utf8"))
+#display message on screen without being sent
 if debug:
+    print "Now running this program in debug mode! That means not sending message to anyone, but just display the message on screen!"
     if send_message_Sunday:
         print(message)
         print('\nMessage sent to Taihe:')
@@ -330,41 +373,3 @@ if debug:
             text_file.write("\n")
             text_file.write('{0}月周五查经服侍表\n'.format(which_month))
             text_file.write(people_one_month_Friday)
-if send_wechat_msg and (not debug):
-    if send_month_task:
-        temp_group=bot.search("基督徒团契".decode("utf8"))[0]
-        with open("month_task.txt","w") as text_file:
-            text_file.write('{0}月主日崇拜服侍表\n'.format(which_month))
-            text_file.write(people_one_month_sunday)
-            text_file.write("\n")
-            text_file.write('{0}月周五查经服侍表\n'.format(which_month))
-            text_file.write(people_one_month_Friday)
-        temp_group.send_msg('{0}月主日崇拜和周五查经服侍表'.format(which_month).decode("utf8"))
-        temp_group.send_file("month_task.txt")
-        #temp_group.send_msg(people_one_month_sunday.decode("utf8"))
-        #temp_group.send_msg('{0}月周五查经服侍表'.format(which_month).decode("utf8"))
-        #temp_group.send_msg(people_one_month_Friday.decode("utf8"))
-        temp_group.send_msg("有需要调整的服侍人员，请联系蔡师母！".decode("utf8"))
-    if send_message_Sunday:
-        for each in TO_wechat:
-            try:
-                temp_friend=bot.search(each.decode("utf8"))[0]
-                temp_friend.send_msg(TEXT.decode("utf8"))
-                print "Sunday worship reminder Message to %s is sent via Wechat!"%(each.decode("utf8"))
-            except:
-                print "Failure to send Sunday worship reminder message to %s via Wechat!"%(each.decode("utf8"))
-        #wechat message to Taihe
-        try:
-            temp_friend=bot.search(taihe_wechat.decode("utf8"))[0]
-            temp_friend.send_msg(TEXT_to_taihe.decode("utf8"))
-            print "Message to %s is sent via Wechat!"%(taihe_wechat)
-        except:
-            print "Failure to send Message to %s via Wechat!"%(taihe_wechat)
-    if send_message_Friday:
-        for each in TO_friday_wechat:
-            try:
-                temp_friend=bot.search(each.decode("utf8"))[0]
-                temp_friend.send_msg(TEXT_friday.decode("utf8"))
-                print "Friday bible study reminder Message to %s is sent via Wechat!"%(each.decode("utf8"))
-            except:
-                print "Failure to send Friday bible study reminder message to %s via Wechat!"%(each.decode("utf8"))
