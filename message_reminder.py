@@ -310,7 +310,10 @@ if not debug:
     server = smtplib.SMTP("smtp.gmail.com",587,timeout=10)
     server.set_debuglevel(1)
     server.starttls()
-    server.login(username,password)
+    try:
+        server.login(username,password)
+    except:
+        print("Could not login the gamil account!")
     if send_message_Sunday:
         try:
             if "amyclwong@gmail.com" in TO:
