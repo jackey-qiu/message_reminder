@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import datetime
+import datetime,time
 import pandas as pd
 import numpy as np
 import calendar
@@ -11,7 +11,8 @@ import getpass
 from access_google_sheet import from_google_sheet_to_txt
 from docx import Document
 
-jason_credential_file="Worship-arrangement-DD-1005ad7eaf1f.json"#credential file for Google sheet API
+#jason_credential_file="Worship-arrangement-DD-1005ad7eaf1f.json"#credential file for Google sheet API
+jason_credential_file="dresden-chinese-fellowship-a6a82eb96447.json"#credential file for Google sheet API
 debug=raw_input("Do you want to run program in a test mode? [y] or n: ") or "y"
 debug = debug=='y'
 send_month_task=raw_input("Do you want to send worship service for one month?[y] or n: ") or "y"
@@ -23,8 +24,8 @@ if send_month_task:
 if not debug:
     bot=Bot()
 if not debug:
-    email_address_sender=raw_input("What's your gmail address: ") or "crqiu2@gmail.com"
-    password_of_your_email=getpass.getpass("What's the password of your gmail: ")
+    email_address_sender=raw_input("What's your gmail address: ") or "ddgemeinde@gmail.com"
+    password_of_your_email=getpass.getpass("What's the password of your gmail: ") or "ecmddresden"
 else:
     email_address_sender=" "
     password_of_your_email=" "
@@ -49,14 +50,14 @@ if update_g_sheets:
         from_google_sheet_to_txt(g_file_name="fushibiao_info_all",save_file="fushibiao.txt",sheet_tag="sunday",jason_credential_file=jason_credential_file)
         print "fushibiao.txt is updated."
     except:
-        print "Unable to download the google sheet for Sunday."
-
+        print "Unable to download the google sheet for Sunday.You should manually download the sheet if it is different from your local copy!"
     print "Updating fushibiao_friday.txt from google sheet"
     try:
         from_google_sheet_to_txt(g_file_name="fushibiao_info_all",save_file="fushibiao_bible_study.txt",sheet_tag="friday",jason_credential_file=jason_credential_file)
         print "fushibiao_friday.txt is updated."
     except:
-        print "Unable to download the google sheet for Friday."
+        print "Unable to download the google sheet for Friday.You should manually download the sheet if it is different from your local copy!"
+        time.sleep(5)
 else:
     pass
 

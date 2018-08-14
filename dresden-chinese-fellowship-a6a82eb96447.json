@@ -1,0 +1,12 @@
+{
+  "type": "service_account",
+  "project_id": "dresden-chinese-fellowship",
+  "private_key_id": "a6a82eb9644797e02b50793a583823e5d8ee2ed9",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCkl5NXSi351oE2\n6icY2dUULbmf6aU+Z3SpSUzh+tF0EWndRMup8WKA5UHZ7nwn0H2guknQJWOMXxUB\nJMspGyUtYS6x7g725wi27kaq2ZHd0GSPOHa/4FM+ccMTJWLzoJDT0GA31f3ItkeM\ndgtf5s0fN6VzuOfHJJfH8FGatzEc6cPK1dGWGx56rXAoFwHou7tUZQKNEd4l9uDd\nJtnAGY3jQfnbK1FMeB5WjGQCbS1VEPmJZy6OX3G/CMyPL7nCpixtTlR9+3POElW8\n+DnH9VVme/lx+wi+RDRDFXV2rwMxosZc2JEL0Vecjz5IEhnglGSycDbxvRoe3pHm\n8uGP9gBFAgMBAAECggEAGxQ2AUU6ybEtGpoM+yVxjUuVj9Xqohj2xFhDLiWsGp63\nzlfgcxH73Q16105JfmpqlMw5UyWnmmNVSxYg1583716fBlaOfzgVArWyii7X9Qix\nVq/ZN6nCQFKKn+aFgGQhF7wfbGhIQ+KbZGRSbEGGa1WmIqMf/O9MCnDDGEN98M3Q\nTj7ztIMwtGYP59bsGUmdUoUYyX9R685Dc7Q2D9GV6a85tQCASQK/ldkIViWRDh2X\nZpHqPkG49nDFA4yJZxDkEFsubumfz7ut042/229F+Vavw2nlBQzQWDQO8BjBeLmZ\nTSFSxAs1fX+WJQj3gwfDI5lbRwUDMHdWnywT/tvjEQKBgQDYPiePlc72/Z1TcTV7\nYh/+rD2rVHCuSdZbjgNDFYvsOaR12FoqsdwimIHWvjjvSOF/Zh8OSuRhKNbjDoUc\nkVaQP9mIMRnFKDpNskxtv75bP+XUg/PwMI1RFkV8l82bKJPxVL7WMmfgNzjTt7pq\nUd8GP0Qoydv/j8QWotttHQrB0QKBgQDC2mP0xFTvFGMFPbhQxfLpZBFAr+eUg6Co\n+LMi/a9VsPjl5x287kQY7obpbnHWjHnNpiZr9pQvcUN6FRG0wsIEagSi8DHNeywo\nCpYQCevPUncWGyQd9li7cPHHR79dFydMZIu4nt/4sZ18mXgNSzaYuUjSkgayBTFz\nVGj1rRXgNQKBgQCteH8IAqe7IAz7iU/cIQWFqer27JBQYM9jNvOK91f+Muep2dvL\ncE8mOa2+9W57Fr4/E09Kie3Xu4lXMKi8GCOXKIF7bdg8f172QVhqmm08im/3Ibup\nLWnQaMtpfeXk2JKGAPPupRULm4Es5rDW5cLCIjKtffHMfCpT9mWMjMW6YQKBgCIe\nw+oUhxrmYwCD8kaSoxqjXzIIm3CyK+vqwNObwJwsxSjc86QlxN7oxc8Se/Sp3Jpa\nQdgd8YztNHeoQNV6VScYuX8euFnW+8B3OhfM5PIE6r2AOy7T+G26NVxEAAp5B3Sl\nFqJZj7aow38SEKejSAguScY1s95wclxTp519lZsRAoGAbNgWfT1Df+VbQFzllae7\nGMUKPISwPIx1naWCd2N/f08NRAFl21aa/pB1BSyPSRhgnQRFxFImltq0rhnEFqA1\nCUDMwgiAYz6VQTGEUP1JJ3/koDWMCd5w+hu90IxksykvXVnMadbnMwGIfBZi9xa0\ns58LgdGoXUcQ7vEZrIR7u7o=\n-----END PRIVATE KEY-----\n",
+  "client_email": "dd-343@dresden-chinese-fellowship.iam.gserviceaccount.com",
+  "client_id": "102533840078361627048",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/dd-343%40dresden-chinese-fellowship.iam.gserviceaccount.com"
+}
