@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import urllib
+import urllib,random
 from lxml import etree
 import datetime,time
 import pandas as pd
@@ -20,14 +20,41 @@ book_corr_lib={"路".decode("utf-8"):"Luke",
                "诗篇".decode("utf-8"):"Psalm",
                "耶".decode("utf-8"):"Jeremiah",
                "约".decode("utf-8"):"John",
-               "来".decode("utf-8"):"Hebrews"}
+               "来".decode("utf-8"):"Hebrews",
+               "哀".decode("utf-8"):"Lamentations",
+               "结".decode("utf-8"):"Ezekiel",
+               "雅".decode("utf-8"):"James",
+               "彼前".decode("utf-8"):"1_Peter",
+               "彼后".decode("utf-8"):"2_Peter",
+               "约一".decode("utf-8"):"1_John",
+               "约二".decode("utf-8"):"2_John",
+               "约三".decode("utf-8"):"3_John",
+               "犹".decode("utf-8"):"Jude",
+               "何".decode("utf-8"):"Hosea",
+               "珥".decode("utf-8"):"Joel",
+               "摩".decode("utf-8"):"Amos",
+               "俄".decode("utf-8"):"Obadiah",
+               "启".decode("utf-8"):"Revelation",
+               "拿".decode("utf-8"):"Jonah",
+               "弥".decode("utf-8"):"Micah",
+               "鸿".decode("utf-8"):"Nahum",
+               "哈".decode("utf-8"):"Habakkuk",
+               "番".decode("utf-8"):"Zephaniah",
+               "该".decode("utf-8"):"Haggai",
+               "亚".decode("utf-8"):"Zechariah",
+               "玛".decode("utf-8"):"Malachi"}
+
+#collection of (chaper,verse) of Book Proverbs to be shown underneath the message reminder each day!
+chapter_verse_proverbs=[(1,7),(1,20),(1,33),(2,2),(2,6),(2,10),(2,20),(2,21),(3,5),(3,7),(3,13),(3,19),(3,27),(3,35),\
+                        (4,8),(4,13),(8,12),(9,9),(9,10),(11,19),(11,25),(11,30),(12,25),(15,1),(15,4),(15,13),(15,23),\
+                        (15,30),(15,30),(15,33),(16,9),(16,16),(16,20)]
 
 send_wechat=raw_input("Send wechat reminder y or [n]:") or "n"
 send_wechat = send_wechat=="y"
 if send_wechat:
     bot=Bot()
 key_today=None
-wechat_friends=["全年读经运动"]
+wechat_friends=["群子在德国","全年读经运动"]
 date_mode=raw_input("Use date specify mode [y] or n:") or "y"
 if date_mode=="y":
     today_date=datetime.date.today() #today's date
@@ -66,15 +93,30 @@ else:
     scripture_today["oldtestament"]=book_chapter_verse
     scripture_today["newtestament"]="-"
 
+cv_p=chapter_verse_proverbs[random.randint(0,31)]
+sock=urllib.urlopen("http://www.chinesebibleonline.com/book/{0}/{1}".format("Proverbs",cv_p[0]))
+htmlsource=sock.read()
+sock.close()
+s1=etree.HTML(htmlsource)
+text_whole_chapter=s1.xpath('//*[@id="page_container"]/div[2]/div[position() mod2=0]/span/text()')
+scripture_proverb=[each.encode('utf-8') for each in text_whole_chapter][cv_p[1]-1].rstrip()
+
+TEXT=\
+"""    今天(%s月%s日)读经章节
+----------------------------
+旧约：%s
+新约：%s
+****************************
+%s
++       祝您读经快乐       +
+****************************"""%tuple([today_month,today_date,scripture_today["oldtestament"].replace(":*",""),scripture_today["newtestament"].replace(":*",""),scripture_proverb])
+
 if send_wechat:
-    TEXT="""今天(%s月%s日)读经章节
-    旧约：%s
-    新约：%s
-    好信息使骨滋润，祝您读经快乐！
-    """%tuple([today_month,today_date,scripture_today["oldtestament"].replace(":*",""),scripture_today["newtestament"].replace(":*","")])
     for friend in wechat_friends:
         temp_group=bot.search(friend.decode("utf8"))[0]
         temp_group.send_msg(TEXT.decode("utf8"))
+else:
+    print TEXT
 
 temp_scripture_holder=[]
 temp_scripture_holder.append("********************************%s月%s日读经章节***************************\n"%tuple([today_month,today_date]))
@@ -91,7 +133,7 @@ for bible_today_tag in scripture_today.values():
         if verse[0]!="*":
             verse=[int(verse[0]),int(verse[1])]
         for chapter in chapters:
-            print "Chapter {} of {}\n".format(chapter,book)
+            #print "Chapter {} of {}\n".format(chapter,book)
             temp_scripture_holder.append("Chapter {} of {}\n".format(chapter,book))
             sock=urllib.urlopen("http://www.chinesebibleonline.com/book/{0}/{1}".format(book,chapter))
             htmlsource=sock.read()
@@ -101,11 +143,11 @@ for bible_today_tag in scripture_today.values():
             text_whole_chapter=[each.encode('utf-8').decode("utf-8") for each in text_whole_chapter]
             if verse[0]=="*":
                 for i in range(len(text_whole_chapter)):
-                    print i+1,text_whole_chapter[i]
+                    #print i+1,text_whole_chapter[i]
                     temp_scripture_holder.append('{0}.{1}'.format(i+1,text_whole_chapter[i].encode("utf-8")))
             else:
                 for i in range(verse[0]-1,verse[1]):
-                    print i+1,text_whole_chapter[i]
+                    #print i+1,text_whole_chapter[i]
                     temp_scripture_holder.append("{0}.{1}".format(i+1,text_whole_chapter[i].encode("utf-8")))
 
 document_today = Document()
@@ -125,4 +167,4 @@ if today_month==str(datetime.date.today().month) and today_date==str(datetime.da
         document_acc.save('scriptures accumulated.docx')
         accumulated_dates.append(key_today)
         with open("accumulated_date.txt","w") as write_f:
-            write_f.write("/n".join(accumulated_dates))
+            write_f.write("\n".join(accumulated_dates))
