@@ -53,6 +53,17 @@ chapter_verse_proverbs=[(1,7),(1,20),(1,33),(2,2),(2,6),(2,10),(2,20),(2,21),(3,
                         (4,8),(4,13),(8,12),(9,9),(9,10),(11,19),(11,25),(11,30),(12,25),(15,1),(15,4),(15,13),(15,23),\
                         (15,30),(15,30),(15,33),(16,9),(16,16),(16,20)]
 
+def alignment(str1, space, align = 'left'):
+    length = len(str1.encode('gb2312'))
+    space = space - length if space >=length else 0
+    if align == 'left':
+        str1 = str1 + ' ' * space
+    elif align == 'right':
+        str1 = ' '* space +str1
+    elif align == 'center':
+        str1 = ' ' * (space //2) +str1 + ' '* (space - space // 2)
+    return str1
+
 send_wechat=raw_input("Send wechat reminder y or [n]:") or "n"
 send_wechat = send_wechat=="y"
 if send_wechat:
@@ -103,30 +114,49 @@ htmlsource=sock.read()
 sock.close()
 s1=etree.HTML(htmlsource)
 text_whole_chapter=s1.xpath('//*[@id="page_container"]/div[2]/div[position() mod2=0]/span/text()')
-scripture_proverb=[each.encode('utf-8') for each in text_whole_chapter][cv_p[1]-1].rstrip()
+scripture_proverb=[each.encode('utf-8') for each in text_whole_chapter][cv_p[1]-1].rstrip().decode("utf8")
 
-TEXT=\
-"""    今天(%s月%s日)读经章节
-----------------------------
-旧约：%s
-新约：%s
-****************************
-%s
-+       祝您读经快乐       +
-****************************"""%tuple([today_month,today_date,scripture_today["oldtestament"].replace(":*",""),scripture_today["newtestament"].replace(":*",""),scripture_proverb])
-
+line1=alignment(("今天(%s月%s日)读经章节"%tuple([today_month,today_date])).decode("utf8"), 28, align = 'center')
+line2=alignment(("-"*28).decode("utf8"), 28, align = 'center')
+line3=alignment(("旧约：%s"%tuple([scripture_today["oldtestament"].replace(":*","")])).decode("utf8"), 28, align = 'center')
+line4=alignment(("新约：%s"%tuple([scripture_today["newtestament"].replace(":*","")])).decode("utf8"), 28, align = 'center')
+line5=alignment(("*"*28).decode("utf8"), 28, align = 'center')
+line6=scripture_proverb
+num_end=(len(line6)/2-1)
+if len(line6)>=num_end:
+    line6=alignment(line6[0:(len(line6)-num_end)], 28, align = 'center')+u"\n"+alignment((line6[(len(line6)-num_end):]), 28, align = 'center')
+line7=alignment("++（：祝您读经快乐：）++".decode("utf8"), 28, align = 'center')
+line8=alignment(("*"*28).decode("utf8"), 28, align = 'center')
+TEXT="\n".join([line1,line2,line3,line4,line5,line6,line7,line8])
 if send_wechat:
     for friend in wechat_friends:
         temp_group=bot.search(friend.decode("utf8"))[0]
         temp_group.send_msg(TEXT.decode("utf8"))
-        img = Image.open("base_images/base_img{0}.jpeg".format(random.randint(1,15)))
+        tag=random.randint(1,14)
+        img = Image.open("base_images/base_img{0}.jpeg".format(tag))
+        offset_lib={1:200,2:200,5:100,7:200,11:100,12:100,4:-400,9:-200,13:-200,14:-200,15:-100}
+        if tag in offset_lib.keys():
+            offset=offset_lib[tag]
+        else:
+            offset=0
         draw = ImageDraw.Draw(img)
         font = ImageFont.truetype("/Library/Fonts/Microsoft/SimSun.ttf", 23)
-        draw.text((50, 650),TEXT.decode("utf-8"),(256,256,0),font=font)
+        draw.text((150, 650+offset),TEXT.decode("utf-8"),(256,256,0),font=font)
         img.save('base_img_revised.jpg')
         temp_group.send_image("base_img_revised.jpg")
 else:
     print TEXT
+    offset_lib={1:200,2:200,5:100,7:200,11:100,12:100,4:-400,9:-200,13:-200,14:-200,15:-100}
+    for i in range(1,15):
+        img = Image.open("base_images/base_img{0}.jpeg".format(i))
+        if i in offset_lib.keys():
+            offset=offset_lib[i]
+        else:
+            offset=0
+        draw = ImageDraw.Draw(img)
+        font = ImageFont.truetype("/Library/Fonts/Microsoft/SimSun.ttf", 23)
+        draw.text((150, 650+offset),TEXT,(256,256,0),font=font)
+        img.save("base_images/base_img{0}_revised.jpg".format(i))
 
 temp_scripture_holder=[]
 temp_scripture_holder.append("********************************%s月%s日读经章节***************************\n"%tuple([today_month,today_date]))
