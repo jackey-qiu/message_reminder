@@ -42,7 +42,8 @@ book_corr_lib={"路".decode("utf-8"):"Luke",
                "番".decode("utf-8"):"Zephaniah",
                "该".decode("utf-8"):"Haggai",
                "亚".decode("utf-8"):"Zechariah",
-               "玛".decode("utf-8"):"Malachi"}
+               "玛".decode("utf-8"):"Malachi",
+               "但".decode("utf-8"):"Daniel"}
 
 #collection of (chaper,verse) of Book Proverbs to be shown underneath the message reminder each day!
 chapter_verse_proverbs=[(1,7),(1,20),(1,33),(2,2),(2,6),(2,10),(2,20),(2,21),(3,5),(3,7),(3,13),(3,19),(3,27),(3,35),\
@@ -66,7 +67,7 @@ else:
     today_date=datetime.date.today() #today's date
     today_month,today_date=str(today_date.month),str(today_date.day)
     book_chapter_verse=raw_input("Specify the book chapter and verses [赛,22:1-4]:") or "赛,22:1-4"
-update_g_sheets=raw_input("Do you want to update bible reading plan from Google Sheet?[y] or n: ") or "y"
+update_g_sheets=raw_input("Do you want to update bible reading plan from Google Sheet? y or [n]: ") or "n"
 update_g_sheets = update_g_sheets=='y'
 jason_credential_file="Worship-arrangement-DD-1005ad7eaf1f.json"#credential file for Google sheet API
 #text file of worship service schedule.
@@ -128,7 +129,11 @@ for bible_today_tag in scripture_today.values():
         book,chapter_verse=bible_today_tag.rsplit(",")
         chapters,verse=chapter_verse.rsplit(':')
         book=book_corr_lib[book.decode("utf-8")]
-        chapters=map(int,chapters.rsplit('-'))
+        chapters_boundary=map(int,chapters.rsplit('-'))
+        if len(chapters_boundary)==2:
+            chapters=range(chapters_boundary[0],chapters_boundary[1]+1)
+        elif len(chapters_boundary)==1:
+            chapters=range(chapters_boundary[0],chapters_boundary[0]+1)
         verse=verse.rsplit("-")
         if verse[0]!="*":
             verse=[int(verse[0]),int(verse[1])]
