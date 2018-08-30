@@ -12,6 +12,9 @@ from wxpy import *
 import getpass
 from access_google_sheet import from_google_sheet_to_txt
 from docx import Document
+from PIL import Image
+from PIL import ImageFont
+from PIL import ImageDraw
 
 book_corr_lib={"路".decode("utf-8"):"Luke",
                "赛".decode("utf-8"):"Isaiah",
@@ -116,6 +119,12 @@ if send_wechat:
     for friend in wechat_friends:
         temp_group=bot.search(friend.decode("utf8"))[0]
         temp_group.send_msg(TEXT.decode("utf8"))
+        img = Image.open("base_images/base_img{0}.jpeg".format(random.randint(1,15)))
+        draw = ImageDraw.Draw(img)
+        font = ImageFont.truetype("/Library/Fonts/Microsoft/SimSun.ttf", 23)
+        draw.text((50, 650),TEXT.decode("utf-8"),(256,256,0),font=font)
+        img.save('base_img_revised.jpg')
+        temp_group.send_image("base_img_revised.jpg")
 else:
     print TEXT
 
