@@ -18,7 +18,11 @@ import numpy as np
 #Go you your google sheet platform, open one sheet file you want to get access to, click share, and paste the email address you just copy
 #Now you are ready to run the following scripts
 
-def from_google_sheet_to_txt(g_file_name="persons",save_file="file.txt",sheet_tag="sheet1",jason_credential_file="Worship-arrangement-DD-1005ad7eaf1f.json"):
+def from_google_sheet_to_txt(g_file_name="persons",save_file=["file.txt"],sheet_tag=["sheet1"],jason_credential_file="Worship-arrangement-DD-1005ad7eaf1f.json"):
+    if type(sheet_tag)!=type([]):
+        sheet_tag=[].append(sheet_tag)
+    if type(save_file)!=type([]):
+        save_file=[].append(save_file)
     google_sheet_file_name=g_file_name#name of your google sheet file
     which_sheet=sheet_tag#tag name of the sheet, you may have several sheets
     jason_key_file=jason_credential_file#credential info in json format you saved
@@ -26,14 +30,17 @@ def from_google_sheet_to_txt(g_file_name="persons",save_file="file.txt",sheet_ta
     scope=['https://www.googleapis.com/auth/spreadsheets','https://www.googleapis.com/auth/drive']
     credentials=ServiceAccountCredentials.from_json_keyfile_name(jason_key_file,scope)
     gc=gspread.authorize(credentials)
-    wks=gc.open(google_sheet_file_name.decode("utf8")).worksheet(which_sheet)
-    col_lables=wks.row_values(1)
-    values=np.array(col_lables)[np.newaxis,:][0:0]
-    for i in range(2,wks.row_count+1):
-        if wks.row_values(i)!=[]:
-            values=np.append(values,np.array(wks.row_values(i))[np.newaxis,:],axis=0)
-        else:
-            break
-    #table information in pandas dataframe format
-    table_df=pd.DataFrame(values,columns=col_lables)
-    table_df.to_csv(path_or_buf=save_file,sep="\t",encoding="utf8",index=False)
+    table=gc.open(google_sheet_file_name.decode("utf8"))
+    wks_list=[table.worksheet(each) for each in sheet_tag]
+    for ii in range(len(wks_list)):
+        wks=wks_list[ii]
+        col_lables=wks.row_values(1)
+        values=np.array(col_lables)[np.newaxis,:][0:0]
+        for i in range(2,wks.row_count+1):
+            if wks.row_values(i)!=[]:
+                values=np.append(values,np.array(wks.row_values(i))[np.newaxis,:],axis=0)
+            else:
+                break
+        #table information in pandas dataframe format
+        table_df=pd.DataFrame(values,columns=col_lables)
+        table_df.to_csv(path_or_buf=save_file[ii],sep="\t",encoding="utf8",index=False)

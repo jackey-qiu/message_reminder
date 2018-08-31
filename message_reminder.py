@@ -44,8 +44,16 @@ fushibiao_friday="fushibiao_bible_study.txt"
 email_db='email.txt'
 wechat_db='wechat.txt'
 if update_g_sheets:
+    #from_google_sheet_to_txt(g_file_name="fushibiao_info_all",save_file="fushibiao.txt",sheet_tag="sunday",jason_credential_file=jason_credential_file)
+    #from_google_sheet_to_txt(g_file_name="fushibiao_info_all",save_file="fushibiao_bible_study.txt",sheet_tag="friday",jason_credential_file=jason_credential_file)
     #now update these information from google spreadsheet
-    print "Updating fushibiao.txt from google sheet"
+    print "Updating fushibiao.txt and fushibiao_friday.txt from google sheet"
+    if send_message_Sunday:
+        from_google_sheet_to_txt(g_file_name="fushibiao_info_all",save_file=["fushibiao.txt"],sheet_tag=["sunday"],jason_credential_file=jason_credential_file)
+    if send_message_Friday:
+        from_google_sheet_to_txt(g_file_name="fushibiao_info_all",save_file=["fushibiao_bible_study.txt"],sheet_tag=["friday"],jason_credential_file=jason_credential_file)
+
+    """
     try:
         from_google_sheet_to_txt(g_file_name="fushibiao_info_all",save_file="fushibiao.txt",sheet_tag="sunday",jason_credential_file=jason_credential_file)
         print "fushibiao.txt is updated."
@@ -58,8 +66,10 @@ if update_g_sheets:
     except:
         print "Unable to download the google sheet for Friday.You should manually download the sheet if it is different from your local copy!"
         time.sleep(5)
+    """
 else:
     pass
+
 
 #Taihe's email address
 taihe_email_address="wilfredwongtaiwoo@hotmail.com"

@@ -125,13 +125,14 @@ line6=scripture_proverb
 num_end=(len(line6)/2-1)
 if len(line6)>=num_end:
     line6=alignment(line6[0:(len(line6)-num_end)], 28, align = 'center')+u"\n"+alignment((line6[(len(line6)-num_end):]), 28, align = 'center')
-line7=alignment("++（：祝您读经快乐：）++".decode("utf8"), 28, align = 'center')
+line7=alignment("+（：祝您读经快乐：）+".decode("utf8"), 28, align = 'center')
 line8=alignment(("*"*28).decode("utf8"), 28, align = 'center')
 TEXT="\n".join([line1,line2,line3,line4,line5,line6,line7,line8])
 if send_wechat:
+    print TEXT
     for friend in wechat_friends:
         temp_group=bot.search(friend.decode("utf8"))[0]
-        temp_group.send_msg(TEXT.decode("utf8"))
+        temp_group.send_msg(TEXT)
         tag=random.randint(1,14)
         img = Image.open("base_images/base_img{0}.jpeg".format(tag))
         offset_lib={1:200,2:200,5:100,7:200,11:100,12:100,4:-400,9:-200,13:-200,14:-200,15:-100}
@@ -141,22 +142,22 @@ if send_wechat:
             offset=0
         draw = ImageDraw.Draw(img)
         font = ImageFont.truetype("/Library/Fonts/Microsoft/SimSun.ttf", 23)
-        draw.text((150, 650+offset),TEXT.decode("utf-8"),(256,256,0),font=font)
+        draw.text((150, 650+offset),TEXT,(256,256,0),font=font)
         img.save('base_img_revised.jpg')
         temp_group.send_image("base_img_revised.jpg")
 else:
     print TEXT
     offset_lib={1:200,2:200,5:100,7:200,11:100,12:100,4:-400,9:-200,13:-200,14:-200,15:-100}
-    for i in range(1,15):
-        img = Image.open("base_images/base_img{0}.jpeg".format(i))
-        if i in offset_lib.keys():
-            offset=offset_lib[i]
-        else:
-            offset=0
-        draw = ImageDraw.Draw(img)
-        font = ImageFont.truetype("/Library/Fonts/Microsoft/SimSun.ttf", 23)
-        draw.text((150, 650+offset),TEXT,(256,256,0),font=font)
-        img.save("base_images/base_img{0}_revised.jpg".format(i))
+    i=random.randint(1,14)
+    img = Image.open("base_images/base_img{0}.jpeg".format(i))
+    if i in offset_lib.keys():
+        offset=offset_lib[i]
+    else:
+        offset=0
+    draw = ImageDraw.Draw(img)
+    font = ImageFont.truetype("/Library/Fonts/Microsoft/SimSun.ttf", 23)
+    draw.text((150, 650+offset),TEXT,(256,256,0),font=font)
+    img.save("base_img_revised.jpg")
 
 temp_scripture_holder=[]
 temp_scripture_holder.append("********************************%s月%s日读经章节***************************\n"%tuple([today_month,today_date]))
