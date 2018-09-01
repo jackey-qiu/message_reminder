@@ -20,9 +20,9 @@ import numpy as np
 
 def from_google_sheet_to_txt(g_file_name="persons",save_file=["file.txt"],sheet_tag=["sheet1"],jason_credential_file="Worship-arrangement-DD-1005ad7eaf1f.json"):
     if type(sheet_tag)!=type([]):
-        sheet_tag=[].append(sheet_tag)
+        sheet_tag=[sheet_tag]
     if type(save_file)!=type([]):
-        save_file=[].append(save_file)
+        save_file=[save_file]
     google_sheet_file_name=g_file_name#name of your google sheet file
     which_sheet=sheet_tag#tag name of the sheet, you may have several sheets
     jason_key_file=jason_credential_file#credential info in json format you saved

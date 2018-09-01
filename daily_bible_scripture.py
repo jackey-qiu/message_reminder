@@ -81,6 +81,12 @@ else:
     today_date=datetime.date.today() #today's date
     today_month,today_date=str(today_date.month),str(today_date.day)
     book_chapter_verse=raw_input("Specify the book chapter and verses [赛,22:1-4]:") or "赛,22:1-4"
+seasons_lib={"spring":[3,4,5],"summer":[6,7,8],"fall":[9,10],"winter":[11,12,1,2]}
+current_season="fall"
+for season,month_list in seasons_lib.items():
+    if int(today_month) in month_list:
+        current_season=season
+        break
 update_g_sheets=raw_input("Do you want to update bible reading plan from Google Sheet? y or [n]: ") or "n"
 update_g_sheets = update_g_sheets=='y'
 jason_credential_file="Worship-arrangement-DD-1005ad7eaf1f.json"#credential file for Google sheet API
@@ -116,8 +122,8 @@ s1=etree.HTML(htmlsource)
 text_whole_chapter=s1.xpath('//*[@id="page_container"]/div[2]/div[position() mod2=0]/span/text()')
 scripture_proverb=[each.encode('utf-8') for each in text_whole_chapter][cv_p[1]-1].rstrip().decode("utf8")
 
-line1=alignment(("今天(%s月%s日)读经章节"%tuple([today_month,today_date])).decode("utf8"), 28, align = 'center')
-line2=alignment(("-"*28).decode("utf8"), 28, align = 'center')
+line1=alignment(("%s月%s日读经章节"%tuple([today_month,today_date])).decode("utf8"), 28, align = 'center')
+line2=alignment(("*"*22).decode("utf8"), 28, align = 'center')
 line3=alignment(("旧约：%s"%tuple([scripture_today["oldtestament"].replace(":*","")])).decode("utf8"), 28, align = 'center')
 line4=alignment(("新约：%s"%tuple([scripture_today["newtestament"].replace(":*","")])).decode("utf8"), 28, align = 'center')
 line5=alignment(("*"*28).decode("utf8"), 28, align = 'center')
@@ -125,39 +131,62 @@ line6=scripture_proverb
 num_end=(len(line6)/2-1)
 if len(line6)>=num_end:
     line6=alignment(line6[0:(len(line6)-num_end)], 28, align = 'center')+u"\n"+alignment((line6[(len(line6)-num_end):]), 28, align = 'center')
-line7=alignment("+（：祝您读经快乐：）+".decode("utf8"), 28, align = 'center')
-line8=alignment(("*"*28).decode("utf8"), 28, align = 'center')
+line7=alignment("(:祝您读经快乐:)".decode("utf8"), 28, align = 'center')
+line8=alignment(("*"*22).decode("utf8"), 28, align = 'center')
 TEXT="\n".join([line1,line2,line3,line4,line5,line6,line7,line8])
 if send_wechat:
     print TEXT
     for friend in wechat_friends:
         temp_group=bot.search(friend.decode("utf8"))[0]
         temp_group.send_msg(TEXT)
-        tag=random.randint(1,14)
-        img = Image.open("base_images/base_img{0}.jpeg".format(tag))
-        offset_lib={1:200,2:200,5:100,7:200,11:100,12:100,4:-400,9:-200,13:-200,14:-200,15:-100}
-        if tag in offset_lib.keys():
-            offset=offset_lib[tag]
-        else:
-            offset=0
+        tag=random.randint(1,31)
+        #img = Image.open("base_images/base_img{0}.jpeg".format(tag))
+        try:
+            img = Image.open("base_images/fall/base_img{0}.jpeg".format(tag))
+        except:
+            try:
+                img = Image.open("base_images/fall/base_img{0}.jpg".format(tag))
+            except:
+                img = Image.open("base_images/fall/base_img{0}.png".format(tag))
+        if img.size!=(640,1136):
+            img=img.resize((640,1136))
         draw = ImageDraw.Draw(img)
-        font = ImageFont.truetype("/Library/Fonts/Microsoft/SimSun.ttf", 23)
-        draw.text((150, 650+offset),TEXT,(256,256,0),font=font)
-        img.save('base_img_revised.jpg')
+        font = ImageFont.truetype("/Library/Fonts/Microsoft/JingDianKaiTiJian-1.ttf", 32)
+        poly_size = (1000,370)
+        poly_offset = (0,0)
+        poly = Image.new('RGBA', poly_size )
+        pdraw = ImageDraw.Draw(poly)
+        pdraw.polygon([ (0,0),  (1000,0),(1000,370), (0,370)],
+                      fill=(0,0,200,100), outline=None)
+        pdraw.text((95, 50),TEXT,(256,256,256),font=font)
+        img.paste(poly, poly_offset, mask=poly)
+        img.save("base_img_revised.jpg")
         temp_group.send_image("base_img_revised.jpg")
 else:
     print TEXT
-    offset_lib={1:200,2:200,5:100,7:200,11:100,12:100,4:-400,9:-200,13:-200,14:-200,15:-100}
-    i=random.randint(1,14)
-    img = Image.open("base_images/base_img{0}.jpeg".format(i))
-    if i in offset_lib.keys():
-        offset=offset_lib[i]
-    else:
-        offset=0
-    draw = ImageDraw.Draw(img)
-    font = ImageFont.truetype("/Library/Fonts/Microsoft/SimSun.ttf", 23)
-    draw.text((150, 650+offset),TEXT,(256,256,0),font=font)
-    img.save("base_img_revised.jpg")
+    for i in range(1,31):
+        #i=random.randint(1,14)
+        try:
+            img = Image.open("base_images/{1}/base_img{0}.jpeg".format(i,current_season))
+        except:
+            try:
+                img = Image.open("base_images/{1}/base_img{0}.jpg".format(i,current_season))
+            except:
+                img = Image.open("base_images/{1}/base_img{0}.png".format(i,current_season))
+        if img.size!=(640,1136):
+            img=img.resize((640,1136))
+        draw = ImageDraw.Draw(img)
+
+        font = ImageFont.truetype("/Library/Fonts/Microsoft/JingDianKaiTiJian-1.ttf", 32)
+        poly_size = (1000,370)
+        poly_offset = (0,0)
+        poly = Image.new('RGBA', poly_size )
+        pdraw = ImageDraw.Draw(poly)
+        pdraw.polygon([ (0,0),  (1000,0),(1000,370), (0,370)],
+                      fill=(0,0,200,100), outline=None)
+        pdraw.text((95, 50),TEXT,(256,256,256),font=font)
+        img.paste(poly, poly_offset, mask=poly)
+        img.save("base_images/{1}/base_img{0}_revised.jpg".format(i,current_season))
 
 temp_scripture_holder=[]
 temp_scripture_holder.append("********************************%s月%s日读经章节***************************\n"%tuple([today_month,today_date]))
