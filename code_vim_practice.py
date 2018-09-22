@@ -15,7 +15,6 @@ from docx import Document
 from PIL import Image
 from PIL import ImageFont
 from PIL import ImageDraw
-from emoji import emojize
 
 book_corr_lib={"路".decode("utf-8"):"Luke",
                "赛".decode("utf-8"):"Isaiah",
@@ -36,7 +35,6 @@ book_corr_lib={"路".decode("utf-8"):"Luke",
                "约三".decode("utf-8"):"3_John",
                "犹".decode("utf-8"):"Jude",
                "何".decode("utf-8"):"Hosea",
-               "提多书".decode("utf-8"):"Titus",
                "珥".decode("utf-8"):"Joel",
                "摩".decode("utf-8"):"Amos",
                "俄".decode("utf-8"):"Obadiah",
@@ -49,12 +47,8 @@ book_corr_lib={"路".decode("utf-8"):"Luke",
                "该".decode("utf-8"):"Haggai",
                "亚".decode("utf-8"):"Zechariah",
                "玛".decode("utf-8"):"Malachi",
-               "但".decode("utf-8"):"Daniel",
-               "传道书".decode("utf-8"):"Ecclesiastes",
-               "提前".decode("utf-8"):"1_Timothy",
-               "提后".decode("utf-8"):"2_Timothy",
-               "雅歌".decode("utf-8"):"Song_of_Songs",
-               "腓利门书".decode("utf-8"):"Philemon"}
+               "但".decode("utf-8"):"Daniel"}
+
 #collection of (chaper,verse) of Book Proverbs to be shown underneath the message reminder each day!
 chapter_verse_proverbs=[(1,7),(1,20),(1,33),(2,2),(2,6),(2,10),(2,20),(2,21),(3,5),(3,7),(3,13),(3,19),(3,27),(3,35),\
                         (4,8),(4,13),(8,12),(9,9),(9,10),(11,19),(11,25),(11,30),(12,25),(15,1),(15,4),(15,13),(15,23),\
@@ -71,15 +65,16 @@ def alignment(str1, space, align = 'left'):
         str1 = ' ' * (space //2) +str1 + ' '* (space - space // 2)
     return str1
 
-send_wechat=raw_input("Send wechat reminder y or [n]:") or "n"
-send_wechat = send_wechat=="y"
+send_wecha=raw_input("Send wechat reminder y or [n]:") or "n"
+send_wecha = send_wechat=="y"
 if send_wechat:
     bot=Bot()
 key_today=None
-wechat_friends=["群子在德国"]
+wechat_friends=["群子在德国","全年读经运动"]
 date_mode=raw_input("Use date specify mode [y] or n:") or "y"
+
 if date_mode=="y":
-    today_date=datetime.date.today() #today's date
+    today_date=datetime.date.today() #Today date
     today_month,today_date=str(today_date.month),str(today_date.day)
     today_month=raw_input("Which month (1-12) or [today's month by default]:") or today_month
     today_date=raw_input("Which date (1-31) or [today's date by default]:") or today_date
@@ -88,6 +83,7 @@ else:
     today_date=datetime.date.today() #today's date
     today_month,today_date=str(today_date.month),str(today_date.day)
     book_chapter_verse=raw_input("Specify the book chapter and verses [赛,22:1-4]:") or "赛,22:1-4"
+#test vim:cc to change an entire line
 seasons_lib={"spring":[3,4,5],"summer":[6,7,8],"fall":[9,10],"winter":[11,12,1,2]}
 current_season="fall"
 for season,month_list in seasons_lib.items():
@@ -138,7 +134,7 @@ line6=scripture_proverb
 num_end=(len(line6)/2-1)
 if len(line6)>=num_end:
     line6=alignment(line6[0:(len(line6)-num_end)], 28, align = 'center')+u"\n"+alignment((line6[(len(line6)-num_end):]), 28, align = 'center')
-    line7=alignment("(:祝你读经愉快:)".decode("utf8"), 28, align = 'center')
+line7=alignment("(:祝您读经快乐:)".decode("utf8"), 28, align = 'center')
 line8=alignment(("*"*22).decode("utf8"), 28, align = 'center')
 TEXT="\n".join([line1,line2,line3,line4,line5,line6,line7,line8])
 if send_wechat:
@@ -147,6 +143,7 @@ if send_wechat:
         temp_group=bot.search(friend.decode("utf8"))[0]
         temp_group.send_msg(TEXT)
         tag=random.randint(1,31)
+        tag=20
         #img = Image.open("base_images/base_img{0}.jpeg".format(tag))
         try:
             img = Image.open("base_images/fall/base_img{0}.jpeg".format(tag))
@@ -234,7 +231,6 @@ for bible_today_tag in scripture_today.values():
 document_today = Document()
 document_today.add_paragraph("".join(temp_scripture_holder).decode("utf8"))
 document_today.save('current scripture.docx')
-bot.file_helper.send_file('current scripture.docx')
 if today_month==str(datetime.date.today().month) and today_date==str(datetime.date.today().day) and date_mode=="y":
     accumulated_dates=[]
     with open("accumulated_date.txt","r") as write_f:

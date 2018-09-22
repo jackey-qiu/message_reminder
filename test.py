@@ -53,8 +53,7 @@ book_corr_lib={"路".decode("utf-8"):"Luke",
                "传道书".decode("utf-8"):"Ecclesiastes",
                "提前".decode("utf-8"):"1_Timothy",
                "提后".decode("utf-8"):"2_Timothy",
-               "雅歌".decode("utf-8"):"Song_of_Songs",
-               "腓利门书".decode("utf-8"):"Philemon"}
+               "雅歌".decode("utf-8"):"Song_of_Songs"}
 #collection of (chaper,verse) of Book Proverbs to be shown underneath the message reminder each day!
 chapter_verse_proverbs=[(1,7),(1,20),(1,33),(2,2),(2,6),(2,10),(2,20),(2,21),(3,5),(3,7),(3,13),(3,19),(3,27),(3,35),\
                         (4,8),(4,13),(8,12),(9,9),(9,10),(11,19),(11,25),(11,30),(12,25),(15,1),(15,4),(15,13),(15,23),\
@@ -76,7 +75,7 @@ send_wechat = send_wechat=="y"
 if send_wechat:
     bot=Bot()
 key_today=None
-wechat_friends=["群子在德国"]
+wechat_friends=["全年读经运动","群子在德国"]
 date_mode=raw_input("Use date specify mode [y] or n:") or "y"
 if date_mode=="y":
     today_date=datetime.date.today() #today's date
@@ -234,7 +233,6 @@ for bible_today_tag in scripture_today.values():
 document_today = Document()
 document_today.add_paragraph("".join(temp_scripture_holder).decode("utf8"))
 document_today.save('current scripture.docx')
-bot.file_helper.send_file('current scripture.docx')
 if today_month==str(datetime.date.today().month) and today_date==str(datetime.date.today().day) and date_mode=="y":
     accumulated_dates=[]
     with open("accumulated_date.txt","r") as write_f:
