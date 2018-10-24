@@ -139,7 +139,7 @@ line6=scripture_proverb
 num_end=(len(line6)/2-1)
 if len(line6)>=num_end:
     line6=alignment(line6[0:(len(line6)-num_end)], 28, align = 'center')+u"\n"+alignment((line6[(len(line6)-num_end):]), 28, align = 'center')
-    line7=alignment("(:祝大家读经愉快:)".decode("utf8"), 28, align = 'center')
+    line7=alignment("(:祝你读经快乐:)".decode("utf8"), 28, align = 'center')
 line8=alignment(("*"*22).decode("utf8"), 28, align = 'center')
 TEXT="\n".join([line1,line2,line3,line4,line5,line6,line7,line8])
 if only_send_to_myself=='n' and send_wechat:
@@ -151,12 +151,12 @@ if only_send_to_myself=='n' and send_wechat:
         tag=today_date
         #img = Image.open("base_images/base_img{0}.jpeg".format(tag))
         try:
-            img = Image.open("base_images/fall/base_img{0}.jpeg".format(tag))
+            img = Image.open("base_images/{1}/base_img{0}.jpeg".format(tag,current_season))
         except:
             try:
-                img = Image.open("base_images/fall/base_img{0}.jpg".format(tag))
+                img = Image.open("base_images/{1}/base_img{0}.jpg".format(tag,current_season))
             except:
-                img = Image.open("base_images/fall/base_img{0}.png".format(tag))
+                img = Image.open("base_images/{1}/base_img{0}.png".format(tag,current_season))
         if img.size!=(640,1136):
             img=img.resize((640,1136))
         draw = ImageDraw.Draw(img)
@@ -177,25 +177,25 @@ elif only_send_to_myself=='y' and send_wechat:
     tag=today_date
     #img = Image.open("base_images/base_img{0}.jpeg".format(tag))
     try:
-        img = Image.open("base_images/fall/base_img{0}.jpeg".format(tag))
+        img = Image.open("base_images/{1}/base_img{0}.jpeg".format(tag,current_season))
     except:
         try:
-            img = Image.open("base_images/fall/base_img{0}.jpg".format(tag))
+            img = Image.open("base_images/{1}/base_img{0}.jpg".format(tag,current_season))
         except:
-            img = Image.open("base_images/fall/base_img{0}.png".format(tag))
+            img = Image.open("base_images/{1}/base_img{0}.png".format(tag,current_season))
     if img.size!=(640,1136):
         img=img.resize((640,1136))
-    draw = ImageDraw.Draw(img)
-    font = ImageFont.truetype("/Library/Fonts/Microsoft/JingDianKaiTiJian-1.ttf", 32)
-    poly_size = (1000,370)
-    poly_offset = (0,0)
-    poly = Image.new('RGBA', poly_size )
-    pdraw = ImageDraw.Draw(poly)
-    pdraw.polygon([ (0,0),  (1000,0),(1000,370), (0,370)],
-                    fill=(0,0,200,100), outline=None)
-    pdraw.text((95, 50),TEXT,(256,256,256),font=font)
-    img.paste(poly, poly_offset, mask=poly)
-    img.save("base_img_revised.jpg")
+        draw = ImageDraw.Draw(img)
+        font = ImageFont.truetype("/Library/Fonts/Microsoft/JingDianKaiTiJian-1.ttf", 32)
+        poly_size = (1000,370)
+        poly_offset = (0,0)
+        poly = Image.new('RGBA', poly_size )
+        pdraw = ImageDraw.Draw(poly)
+        pdraw.polygon([ (0,0),  (1000,0),(1000,370), (0,370)],
+                        fill=(0,0,200,100), outline=None)
+        pdraw.text((95, 50),TEXT,(256,256,256),font=font)
+        img.paste(poly, poly_offset, mask=poly)
+        img.save("base_img_revised.jpg")
     bot.file_helper.send_image("base_img_revised.jpg")
     bot.file_helper.send_msg(TEXT)
 else:
