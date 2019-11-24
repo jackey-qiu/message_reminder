@@ -16,7 +16,14 @@ from PIL import Image
 from PIL import ImageFont
 from PIL import ImageDraw
 from emoji import emojize
-
+aaaaaa=6
+bbbbbba=c
+bbbbbb=7
+b=5
+a=np.array([1,2,3,4])
+time.daylight
+aaaaaa=b
+np.append()
 book_corr_lib={"路".decode("utf-8"):"Luke",
                "赛".decode("utf-8"):"Isaiah",
                "箴言".decode("utf-8"):"Proverbs",

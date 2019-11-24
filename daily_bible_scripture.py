@@ -76,7 +76,7 @@ send_wechat = send_wechat=="y"
 if send_wechat:
     bot=Bot()
 key_today=None
-wechat_friends=["全年读经运动","群子在德国"]
+wechat_friends=["群子在德国"]
 only_send_to_myself=raw_input("Only send message to myself? [y] or n:") or "y"
 date_mode=raw_input("Use date specify mode [y] or n:") or "y"
 if date_mode=="y":
