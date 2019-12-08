@@ -18,7 +18,7 @@ from PIL import ImageDraw
 from emoji import emojize
 import sys,os
 from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QGraphicsScene
-from PyQt5.QtCore import QDate
+from PyQt5.QtCore import QDate, Qt
 from PyQt5.QtGui import QPixmap
 from PyQt5 import uic
 from util import *
@@ -47,10 +47,11 @@ class MyMainWindow(QMainWindow):
         self.bible_reading_plan = os.path.join(msg_path,"bible_reading_plan.txt")
         self.scripture_today_tag = {}
         self.scripture_today = {}
-        self.bot = Bot()
+        # self.bot = Bot()
         self.dateEdit.setDate(QDate.currentDate())
         self.pushButton_extract.clicked.connect(self.extract_scripture)
         self.pushButton_send.clicked.connect(self.send_wechat)
+        self.pushButton_load.clicked.connect(self.load_scripture)
 
     def send_wechat(self):
         self.bot.file_helper.send_image(os.path.join(msg_path,"base_img_revised.jpg"))
@@ -61,6 +62,13 @@ class MyMainWindow(QMainWindow):
                 temp_group.send_msg(self.message)
                 temp_group.send_image(os.path.join(msg_path,"base_img_revised.jpg"))
         
+    def load_scripture(self):
+        scripture_tag = self.lineEdit_scripture.text().rsplit(";")
+        self.scripture_today = {}
+        for i in range(len(scripture_tag)):
+            self.scripture_today[i] = scripture_tag[i] 
+        self.extract_scripture_from_website()
+        self.textBrowser.setText("\n".join(self.scripture_extracted))
 
     def extract_scripture(self):
         self.get_date_today()
@@ -79,6 +87,7 @@ class MyMainWindow(QMainWindow):
 
     def create_bible_reading_lib(self):
         bible_reading = open(self.bible_reading_plan,'r').readlines()[1:]
+        self.textEdit_plan.setText("".join(bible_reading))
         bible_reading_lib={}
         for each in bible_reading:
             items=each.rstrip().rsplit()
@@ -86,6 +95,7 @@ class MyMainWindow(QMainWindow):
         self.bible_reading_lib = bible_reading_lib
 
     def get_scripture_today_tag(self):
+        self.scripture_today = {}
         self.scripture_today["oldtestament"]=self.bible_reading_lib[self.key_today][0]
         self.scripture_today["newtestament"]=self.bible_reading_lib[self.key_today][1]
 
@@ -153,7 +163,7 @@ class MyMainWindow(QMainWindow):
         line8=alignment(("*"*22), 28, align = 'center')
         TEXT="\n".join([line1,line2,line3,line4,line5,line6,line7,line8])
         self.message = TEXT
-        img = Image.open(os.path.join(msg_path,"base_images/fall/base_img{0}.jpg".format(self.today_date[1])))
+        img = Image.open(os.path.join(msg_path,"base_images/winter/base_img{0}.jpg".format(self.today_date[1])))
         if img.size!=(640,1136):
             img=img.resize((640,1136))
         _ = ImageDraw.Draw(img)
@@ -171,7 +181,8 @@ class MyMainWindow(QMainWindow):
         self.pixmap = QPixmap(os.path.join(msg_path,"base_img_revised.jpg"))
         self.scene.addPixmap(self.pixmap)
         self.graphicsView.setScene(self.scene)
-        # self.graphicsView.fitInView(self.pixmap)
+        self.graphicsView.fitInView(self.scene.itemsBoundingRect(), Qt.KeepAspectRatio)
+        #item[, aspectRadioMode=Qt.IgnoreAspectRatio]
         self.graphicsView.show()
 
 
