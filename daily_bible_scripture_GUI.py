@@ -73,6 +73,7 @@ class MyMainWindow(QMainWindow):
     def extract_scripture(self):
         self.get_date_today()
         self.key_today = "/".join([str(self.dateEdit.date().month()),str(self.dateEdit.date().day())])
+        self.today_date = (str(self.dateEdit.date().month()),str(self.dateEdit.date().day()))
         self.create_bible_reading_lib()
         self.get_scripture_today_tag()
         self.extract_scripture_from_website()
