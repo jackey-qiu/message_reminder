@@ -230,7 +230,7 @@ for bible_today_tag in scripture_today.values():
     if bible_today_tag=="-":
         pass
     else:
-        print bible_today_tag
+        print "test",bible_today_tag
         book,chapter_verse=bible_today_tag.rsplit(",")
         chapters,verse=chapter_verse.rsplit(':')
         book=book_corr_lib[book.decode("utf-8")]
