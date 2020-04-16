@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>747</width>
-    <height>627</height>
+    <height>602</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -152,6 +152,12 @@
             <width>380</width>
             <height>0</height>
            </size>
+          </property>
+          <property name="font">
+           <font>
+            <family>STSong</family>
+            <pointsize>15</pointsize>
+           </font>
           </property>
          </widget>
         </item>

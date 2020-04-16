@@ -44,10 +44,10 @@ class MyMainWindow(QMainWindow):
         self.web_site = None
         self.wechat_group = []
         self.book_coor_lib = None
-        self.bible_reading_plan = os.path.join(msg_path,"bible_reading_plan.txt")
+        self.bible_reading_plan = os.path.join(msg_path,"bible_reading_plan_kiel.txt")
         self.scripture_today_tag = {}
         self.scripture_today = {}
-        # self.bot = Bot()
+        self.bot = Bot()
         self.dateEdit.setDate(QDate.currentDate())
         self.pushButton_extract.clicked.connect(self.extract_scripture)
         self.pushButton_send.clicked.connect(self.send_wechat)
@@ -151,7 +151,7 @@ class MyMainWindow(QMainWindow):
         self.scripture_proverb=[each for each in text_whole_chapter][cv_p[1]-1].rstrip()
 
     def prepare_image_reminder(self):
-        line1=alignment(("%s月%s日读经章节"%tuple(self.today_date)), 28, align = 'center')
+        line1=alignment(("本周2020年%s月%s日读经章节"%tuple(self.today_date)), 28, align = 'center')
         line2=alignment(("*"*22), 28, align = 'center')
         line3=alignment(("旧约：%s"%tuple([self.scripture_today["oldtestament"].replace(":*","")])), 28, align = 'center')
         line4=alignment(("新约：%s"%tuple([self.scripture_today["newtestament"].replace(":*","")])), 28, align = 'center')
@@ -170,11 +170,11 @@ class MyMainWindow(QMainWindow):
             img=img.resize((640,1136))
         _ = ImageDraw.Draw(img)
         font = ImageFont.truetype("/Library/Fonts/Microsoft/JingDianKaiTiJian-1.ttf", 32)
-        poly_size = (1000,370)
+        poly_size = (1000,570)
         poly_offset = (0,0)
         poly = Image.new('RGBA', poly_size )
         pdraw = ImageDraw.Draw(poly)
-        pdraw.polygon([ (0,0),  (1000,0),(1000,370), (0,370)],
+        pdraw.polygon([ (0,0),  (1000,0),(1000,570), (0,570)],
                       fill=(0,0,200,100), outline=None)
         pdraw.text((95, 50),TEXT,(256,256,256),font=font)
         img.paste(poly, poly_offset, mask=poly)

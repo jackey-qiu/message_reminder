@@ -1,4 +1,5 @@
 book_corr_lib={"路":"Luke",
+               "书":"Joshua",
                "赛":"Isaiah",
                "箴言":"Proverbs",
                "帖前":"1_Thessalonians",
@@ -35,7 +36,9 @@ book_corr_lib={"路":"Luke",
                "提前":"1_Timothy",
                "提后":"2_Timothy",
                "雅歌":"Song_of_Songs",
-               "腓利门书":"Philemon"}
+               "腓利门书":"Philemon",
+               "创":"Genesis",
+               "太":"Matthew"}
 #collection of (chaper,verse) of Book Proverbs to be shown underneath the message reminder each day!
 chapter_verse_proverbs=[(1,7),(1,20),(1,33),(2,2),(2,6),(2,10),(2,20),(2,21),(3,5),(3,7),(3,13),(3,19),(3,27),(3,35),\
                         (4,8),(4,13),(8,12),(9,9),(9,10),(11,19),(11,25),(11,30),(12,25),(15,1),(15,4),(15,13),(15,23),\
