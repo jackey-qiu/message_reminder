@@ -1,2 +1,5 @@
-# message_reminder
-used to pull google sheet data and then send reminder email and wechat based on the info
+To launch Bible reader:
+Ensure you PyQt5 installed
+
+>>>cd message_reminder
+>>>python Bible_Reader_GUI.py
