@@ -115,11 +115,12 @@ class MyMainWindow(QMainWindow):
         self.spring_desert_date = None
         self.total_chapter = 1189
         self.old_testimony = 929
-        self.reading_plan = ['4_2_2','2'][0]
+        self.reading_plan = ['4-2-2','2'][0]
         self.speed = 2
         self.first_day_in_plan = None 
         self.comboBox_book.clear()
         self.comboBox_book.addItems(bible_books)
+        self.update_reading_plan()
         self.update_count_down_time()
         self.get_spring_desert_article()
 
@@ -165,78 +166,105 @@ class MyMainWindow(QMainWindow):
         cursor.insertHtml('''<p><span style="color: blue;size:15;">{} <br></span>'''.format(" "))
         self.textBrowser_bible.setText(''.join(chapter_content)) 
         
-
     def get_scripture_for_today(self):
         books = []
         chapters = []
-        method = self.reading_plan.rsplit("_")
+        method = self.reading_plan.rsplit("-")
         print(method)
+        self.speed = int(method[0])
         if len(method)==1:
             speed = int(method[0])
         elif len(method)==3:
             speed_old = int(method[1])
             speed_new = int(method[2])
         if 'speed' in locals().keys():
-            # self.speed = speed
+            chapter_content = self.craw_bible_chapters(scope='all',speed = speed)
+        else:
+            chapter_content_new = self.craw_bible_chapters(scope='new',speed = speed_new)
+            if chapter_content_new == 'End':
+                chapter_content_old = self.craw_bible_chapters(scope='old',speed = speed_old, more = speed_new)
+            else:
+                chapter_content_old = self.craw_bible_chapters(scope='old',speed = speed_old)
+            if chapter_content_new=='End':
+                chapter_content_new = '\n'
+            chapter_content = chapter_content_old + chapter_content_new
+
+        self.textBrowser_bible.clear()
+        chapter_content = ['------------------------------------------------------------------------------------------------------------------------------------------------\n'] + chapter_content
+        cursor = self.textBrowser_bible.textCursor()
+        cursor.insertHtml('''<p><span style="color: blue;size:15;">{} <br></span>'''.format(" "))
+        self.textBrowser_bible.setText(''.join(chapter_content)) 
+
+    def craw_bible_chapters(self,scope = 'all',speed=2, more = 0):
+        offset = 0
+        if scope=='all':
             num_nodes_book =  len(self.html_overview.xpath("/html/body/div[2]/ul/div")) 
-            acc_chapters = 0
-            node_index = []
-            book_names = []
-            start_chapter_index = []
-            end_chapter_index = []
-            target_chapters = speed*(int(self.total_chapter/speed)+[1,0][int((self.total_chapter%speed)==0)]-int(self.lineEdit_count_down.text()))
-            print('target_chapters',target_chapters,speed)
-            for i in range(num_nodes_book):
-                current_book_length = len(self.html_overview.xpath("/html/body/div[2]/ul/div[{}]/ul/li".format(i+1)))
-                acc_chapters+= current_book_length
-                if acc_chapters>target_chapters:
-                    #book_names.append(self.html_overview.xpath("/html/body/div[2]/ul/div"))
-                    node_index.append(i+1)
-                    start_chapter_index.append(target_chapters - (acc_chapters - current_book_length) + 1)
-                    end_chapter_index_= start_chapter_index[-1] + speed
-                    if end_chapter_index_>current_book_length:
-                        end_chapter_index.append(current_book_length+1)
+        elif scope=='new':
+            num_nodes_book = 27
+            offset = 40
+        elif scope=='old':
+            num_nodes_book = 39
+
+        acc_chapters = 0
+        node_index = []
+        book_names = []
+        start_chapter_index = []
+        end_chapter_index = []
+        target_chapters = speed*(int(self.total_chapter/self.speed)+[1,0][int((self.total_chapter%self.speed)==0)]-int(self.lineEdit_count_down.text()))
+        if scope=='new':
+            if target_chapters > (self.total_chapter - self.old_testimony):
+                return 'End'
+            else:
+                pass
+        print('target_chapters',scope,target_chapters,speed)
+        for i in range(num_nodes_book):
+            current_book_length = len(self.html_overview.xpath("/html/body/div[2]/ul/div[{}]/ul/li".format(offset+i+1)))
+            acc_chapters+= current_book_length
+            if acc_chapters>target_chapters:
+                node_index.append(i+1+offset)
+                start_chapter_index.append(target_chapters - (acc_chapters - current_book_length) + 1)
+                end_chapter_index_= start_chapter_index[-1] + speed + more
+                if end_chapter_index_>current_book_length:
+                    end_chapter_index.append(current_book_length+1)
+                    if (end_chapter_index_ - current_book_length)<len(self.html_overview.xpath("/html/body/div[2]/ul/div[{}]/ul/li".format(offset+i+1+1))):
                         end_chapter_index.append(end_chapter_index_ - current_book_length)
                         start_chapter_index.append(1)
-                        if len(self.html_overview.xpath("/html/body/div[2]/ul/div[{}]/ul/li".format(i+2)))==0:
-                            node_index.append(i+3)
-                        else:
-                            node_index.append(i+2)
                     else:
-                        end_chapter_index.append(end_chapter_index_)
-                    break
-            print(node_index,start_chapter_index,end_chapter_index) 
-            chapter_content = []
-            for i in range(len(node_index)):
-                each_node_index = node_index[i]
-                start, end = start_chapter_index[i], end_chapter_index[i]
-                for j in range(start, end):
-                    try:
-                        url_tail = self.html_overview.xpath("/html/body/div[2]/ul/div[{}]/ul/li[{}]/a/@href".format(each_node_index,j))[0]
-                    except:
-                        url_tail = self.html_overview.xpath("/html/body/div[2]/ul/div[{}]/ul/li[{}]/a/@href".format(each_node_index+1,j))[0]
-                    print(url_tail)
-                    url = "http://mobile.chinesebibleonline.com{}".format(url_tail)
-                    sock_temp =urllib.request.urlopen(url)
-                    html_temp = etree.HTML(sock_temp.read())
-                    sock_temp.close()
-                    book_name = ["\n《{}》第{}章\n".format(html_temp.xpath("/html/body/div[2]/div[1]/text()")[0],j)]
-                    try:
-                        scriptures = html_temp.xpath("/html/body/div[2]/div/span[2]/text()")
-                        verse_number = html_temp.xpath("/html/body/div[2]/div/span[1]/text()")
-                        combined = [verse_number[ii].rstrip()+scriptures[ii]+'\n' for ii in range(len(scriptures))]
-                        chapter_content = chapter_content + book_name + combined
-                    except:
-                        pass
-            self.textBrowser_bible.clear()
-            chapter_content = ['------------------------------------------------------------------------------------------------------------------------------------------------\n'] + chapter_content
-            cursor = self.textBrowser_bible.textCursor()
-            cursor.insertHtml('''<p><span style="color: blue;size:15;">{} <br></span>'''.format(" "))
-            #for each in chapter_content:
-            #    each=each+'\n'
-            #    cursor = self.textBrowser_bible.textCursor()
-            #    cursor.insertHtml('''<p><span style="color: blue;size:15;">{} <br></span>'''.format(each))
-            self.textBrowser_bible.setText(''.join(chapter_content)) 
+                        start_chapter_index.append(1)
+                        start_chapter_index.append(1)
+                        end_chapter_index.append(len(self.html_overview.xpath("/html/body/div[2]/ul/div[{}]/ul/li".format(offset+i+1+1))))
+                        end_chapter_index.append(end_chapter_index_ - current_book_length - len(self.html_overview.xpath("/html/body/div[2]/ul/div[{}]/ul/li".format(offset+i+1+1))))
+                    if len(self.html_overview.xpath("/html/body/div[2]/ul/div[{}]/ul/li".format(offset+i+2)))==0:
+                        node_index.append(offset+i+3)
+                    else:
+                        node_index.append(offset+i+2)
+                else:
+                    end_chapter_index.append(end_chapter_index_)
+                break
+        print(node_index,start_chapter_index,end_chapter_index) 
+        chapter_content = []
+        for i in range(len(node_index)):
+            each_node_index = node_index[i]
+            start, end = start_chapter_index[i], end_chapter_index[i]
+            for j in range(start, end):
+                try:
+                    url_tail = self.html_overview.xpath("/html/body/div[2]/ul/div[{}]/ul/li[{}]/a/@href".format(each_node_index,j))[0]
+                except:
+                    url_tail = self.html_overview.xpath("/html/body/div[2]/ul/div[{}]/ul/li[{}]/a/@href".format(each_node_index+1,j))[0]
+                print(url_tail)
+                url = "http://mobile.chinesebibleonline.com{}".format(url_tail)
+                sock_temp =urllib.request.urlopen(url)
+                html_temp = etree.HTML(sock_temp.read())
+                sock_temp.close()
+                book_name = ["\n《{}》第{}章\n".format(html_temp.xpath("/html/body/div[2]/div[1]/text()")[0],j)]
+                try:
+                    scriptures = html_temp.xpath("/html/body/div[2]/div/span[2]/text()")
+                    verse_number = html_temp.xpath("/html/body/div[2]/div/span[1]/text()")
+                    combined = [verse_number[ii].rstrip()+scriptures[ii]+'\n' for ii in range(len(scriptures))]
+                    chapter_content = chapter_content + book_name + combined
+                except:
+                    pass
+        return chapter_content
 
     def get_spring_desert_article(self):
         selected_date = self.calendarWidget.selectedDate().toPyDate()
@@ -255,19 +283,22 @@ class MyMainWindow(QMainWindow):
 
     def update_reading_plan(self):
         plan = self.comboBox_plan.currentText()
-        if plan == "一日四章（新旧各两章）":
+        if plan == "一天四章（新旧各两章）":
             self.reading_plan = '4-2-2'
             self.speed = 4
         elif plan == "一天两章（顺序）":
             self.reading_plan = '2'
             self.speed = 2
+        self.update_count_down_time()
 
     def update_count_down_time(self):
+        print("something happend")
         start_month = int(self.spinBox_start_month.value())
         start_date = int(self.spinBox_start_date.value())
         start_year = int(datetime.date.today().year)
         start = datetime.date(start_year, start_month, start_date)
         count_down =  int(self.total_chapter/self.speed)+[1,0][int((self.total_chapter%self.speed)==0)] - (datetime.date.today()-start).days
+        print(count_down,self.speed)
         self.lineEdit_count_down.setText(str(count_down))
 
 
