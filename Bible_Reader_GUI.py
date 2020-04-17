@@ -315,7 +315,7 @@ class MyMainWindow(QMainWindow):
                     f.write(self.plainTextEdit.toPlainText())
             else:
                 with open(notes_path,'a+') as f:
-                    f.write("{}月{}月{}日\n".format(y,m,d))
+                    f.write("\n\n{}月{}月{}日\n".format(y,m,d))
                     # f.write("{}-{}-{}\n".format(y,m,d))
                     f.write(self.plainTextEdit.toPlainText())
         else:

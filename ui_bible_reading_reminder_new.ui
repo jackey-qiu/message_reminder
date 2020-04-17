@@ -435,7 +435,13 @@
          </layout>
         </item>
         <item>
-         <widget class="QTextBrowser" name="textBrowser_bible"/>
+         <widget class="QTextBrowser" name="textBrowser_bible">
+          <property name="font">
+           <font>
+            <pointsize>14</pointsize>
+           </font>
+          </property>
+         </widget>
         </item>
         <item>
          <widget class="Line" name="line_4">
