@@ -11,9 +11,6 @@ import calendar
 import smtplib
 from email.mime.text import MIMEText
 from wxpy import *
-# import getpass
-# from access_google_sheet import from_google_sheet_to_txt
-# from docx import Document
 import sys,os
 from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QGraphicsScene
 from PyQt5.QtCore import QDate, Qt
@@ -26,7 +23,7 @@ except:
     import locate_path
 msg_path = locate_path.module_path_locator()
 print(msg_path)
-# msg_path = os.path.dirname(os.path.dirname(script_path))
+
 bible_books = \
 ['创世记',
  '出埃及记',
@@ -123,18 +120,54 @@ class MyMainWindow(QMainWindow):
         self.update_reading_plan()
         self.update_count_down_time()
         self.get_spring_desert_article()
+        self.load_extra_chapter_number()
+        self.check_read_or_not()
 
         #signal-slot-pair connection
         self.calendarWidget.selectionChanged.connect(self.get_spring_desert_article)
+        self.pushButton_today.clicked.connect(self.update_count_down_time)
         self.pushButton_today.clicked.connect(self.get_scripture_for_today)
         self.pushButton_specified.clicked.connect(self.get_scripture_specified)
         self.pushButton_load.clicked.connect(self.load_all_notes)
         self.pushButton_save.clicked.connect(self.save_notes)
+        self.pushButton_before.clicked.connect(self.update_count_down_time_2)
+        self.pushButton_before.clicked.connect(self.get_scripture_for_today)
+        self.pushButton_check.clicked.connect(self.update_check_read)
         self.spinBox_start_date.valueChanged.connect(self.update_count_down_time)
         self.spinBox_start_month.valueChanged.connect(self.update_count_down_time)
+        self.spinBox_more_new.valueChanged.connect(self.update_extra_chapter_number)
+        self.spinBox_more_old.valueChanged.connect(self.update_extra_chapter_number)
         self.comboBox_book.currentIndexChanged.connect(self.set_bible_book)
         self.comboBox_plan.currentIndexChanged.connect(self.update_reading_plan)
 
+    def check_read_or_not(self):
+        today = datetime.date.today()
+        y,m,d = today.year, today.month, today.day
+        with open(os.path.join(msg_path,'read_or_not.txt'),'r') as f:
+            date = f.readlines()[0]
+            if date.rstrip()=='{}.{}.{}'.format(d,m,y):
+                self.label_check.setText('今日经文已读')
+            else:
+                self.label_check.setText('今日经文未读')
+
+    def update_check_read(self):
+        today = datetime.date.today()
+        y,m,d = today.year, today.month, today.day
+        with open(os.path.join(msg_path,'read_or_not.txt'),'w') as f:
+            f.write('{}.{}.{}'.format(d,m,y))
+            self.label_check.setText('今日经文已读')
+
+
+    def load_extra_chapter_number(self):
+        with open(os.path.join(msg_path,'extra_chapter_number.txt'),'r') as f:
+            old, new = list(map(int,f.readlines()[0].rstrip().rsplit()))
+            self.spinBox_more_old.setValue(old)
+            self.spinBox_more_new.setValue(new)
+    
+    def update_extra_chapter_number(self):
+        with open(os.path.join(msg_path,'extra_chapter_number.txt'),'w') as f:
+            text_to_write = '{}  {}'.format(self.spinBox_more_old.value(),self.spinBox_more_new.value())
+            f.write(text_to_write)
 
     def get_scripture_specified(self):
         chapter_content = []
@@ -197,20 +230,23 @@ class MyMainWindow(QMainWindow):
 
     def craw_bible_chapters(self,scope = 'all',speed=2, more = 0):
         offset = 0
+        append_chapters = 0
         if scope=='all':
             num_nodes_book =  len(self.html_overview.xpath("/html/body/div[2]/ul/div")) 
+            append_chapters = int(self.spinBox_more_old.value())+int(self.spinBox_more_new.value())
         elif scope=='new':
             num_nodes_book = 27
             offset = 40
+            append_chapters = int(self.spinBox_more_new.value())
         elif scope=='old':
             num_nodes_book = 39
-
+            append_chapters = int(self.spinBox_more_old.value())
         acc_chapters = 0
         node_index = []
         book_names = []
         start_chapter_index = []
         end_chapter_index = []
-        target_chapters = speed*(int(self.total_chapter/self.speed)+[1,0][int((self.total_chapter%self.speed)==0)]-int(self.lineEdit_count_down.text()))
+        target_chapters = speed*(int(self.total_chapter/self.speed)+[1,0][int((self.total_chapter%self.speed)==0)]-int(self.lineEdit_count_down.text())) + append_chapters
         if scope=='new':
             if target_chapters > (self.total_chapter - self.old_testimony):
                 return 'End'
@@ -300,7 +336,19 @@ class MyMainWindow(QMainWindow):
         count_down =  int(self.total_chapter/self.speed)+[1,0][int((self.total_chapter%self.speed)==0)] - (datetime.date.today()-start).days
         print(count_down,self.speed)
         self.lineEdit_count_down.setText(str(count_down))
+        total_days = self.total_chapter/self.speed
+        print(1-count_down/total_days, self.total_chapter)
+        self.progressBar.setValue(100*(1-count_down/total_days))
 
+    def update_count_down_time_2(self):
+        start_month = int(self.spinBox_start_month.value())
+        start_date = int(self.spinBox_start_date.value())
+        start_year = int(datetime.date.today().year)
+        start = datetime.date(start_year, start_month, start_date)
+        count_down =  int(self.total_chapter/self.speed)+[1,0][int((self.total_chapter%self.speed)==0)] - (self.calendarWidget.selectedDate().toPyDate()-start).days
+        self.lineEdit_count_down.setText(str(count_down))
+        total_days = self.total_chapter/self.speed
+        self.progressBar.setValue(100*(1-count_down/total_days))
 
     def set_bible_book(self):
         self.lineEdit_book.setText(self.comboBox_book.currentText())
@@ -330,10 +378,9 @@ class MyMainWindow(QMainWindow):
         else:
             pass
 
-
-
 if __name__ == "__main__":
-    QApplication.setStyle("windows")
+    # QApplication.setStyle("windows")
+    QApplication.setStyle("fusion")
     app = QApplication(sys.argv)
     myWin = MyMainWindow()
     myWin.show()
