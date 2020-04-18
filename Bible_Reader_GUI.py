@@ -17,6 +17,7 @@ from PyQt5.QtCore import QDate, Qt
 from PyQt5.QtGui import QPixmap
 from PyQt5 import uic
 from util import *
+from random import randint
 try:
     from . import locate_path
 except:
@@ -107,6 +108,13 @@ class MyMainWindow(QMainWindow):
         self.html_overview_ds = etree.HTML(sock.read())
         sock.close()
 
+        url_scripture = "http://cclw.net/resources/shenjinjinju.htm"
+        sock = urllib.request.urlopen(url_scripture)
+        self.html_scripture = etree.HTML(sock.read())
+        sock.close()
+        self.scripture_list = self.html_scripture.xpath("/html/body/center/table/tbody/tr/td/ol/p/text()")
+        self.get_golden_scripture()
+
         self.bible_today_tag = ""
         self.today_date = None
         self.spring_desert_date = None
@@ -133,12 +141,24 @@ class MyMainWindow(QMainWindow):
         self.pushButton_before.clicked.connect(self.update_count_down_time_2)
         self.pushButton_before.clicked.connect(self.get_scripture_for_today)
         self.pushButton_check.clicked.connect(self.update_check_read)
+        self.pushButton_change.clicked.connect(self.get_golden_scripture)
+        self.pushButton_save_current.clicked.connect(self.save_scripture)
+        self.pushButton_load_saved.clicked.connect(self.load_all_scriptures)
         self.spinBox_start_date.valueChanged.connect(self.update_count_down_time)
         self.spinBox_start_month.valueChanged.connect(self.update_count_down_time)
         self.spinBox_more_new.valueChanged.connect(self.update_extra_chapter_number)
         self.spinBox_more_old.valueChanged.connect(self.update_extra_chapter_number)
         self.comboBox_book.currentIndexChanged.connect(self.set_bible_book)
         self.comboBox_plan.currentIndexChanged.connect(self.update_reading_plan)
+
+    def get_golden_scripture(self):
+        index1,index2 = randint(0,len(self.scripture_list)),randint(0,len(self.scripture_list))
+        s1,s2 = self.scripture_list[index1].rsplit(), self.scripture_list[index2].rsplit()
+        s1,s2 = "".join(s1[1:]),"".join(s2[1:])
+        self.textBrowser_scripture.clear()
+        cursor = self.textBrowser_scripture.textCursor()
+        cursor.insertHtml('''<p><span style="color: red;size:15;">{} <br></span>'''.format(" "))
+        self.textBrowser_scripture.setText(''.join(['\n','1.',s1,'\n\n','2.',s2])) 
 
     def check_read_or_not(self):
         today = datetime.date.today()
@@ -375,6 +395,31 @@ class MyMainWindow(QMainWindow):
         if os.path.exists(notes_path):
             with open(notes_path,'r') as f:
                 self.plainTextEdit.setPlainText("".join(f.readlines()))
+        else:
+            pass
+
+    def save_scripture(self):
+        notes_path = os.path.join(msg_path,'Bible_scriptures.txt')
+        y,m,d = datetime.date.today().year, datetime.date.today().month, datetime.date.today().day
+        if self.textBrowser_scripture.toPlainText()!='':
+            if not os.path.exists(notes_path):
+                with open(notes_path,'w') as f:
+                    f.write("{}月{}月{}日\n".format(y,m,d))
+                    f.write(self.textBrowser_scripture.toPlainText())
+            else:
+                with open(notes_path,'a+') as f:
+                    f.write("\n\n{}月{}月{}日\n".format(y,m,d))
+                    # f.write("{}-{}-{}\n".format(y,m,d))
+                    f.write(self.textBrowser_scripture.toPlainText())
+        else:
+            pass
+
+    def load_all_scriptures(self):
+        notes_path = os.path.join(msg_path,'Bible_scriptures.txt')
+        # self.save_notes()
+        if os.path.exists(notes_path):
+            with open(notes_path,'r') as f:
+                self.textBrowser_scripture.setText("".join(f.readlines()))
         else:
             pass
 
