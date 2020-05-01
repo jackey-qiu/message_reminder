@@ -272,17 +272,19 @@ class MyMainWindow(QMainWindow):
                 return 'End'
             else:
                 pass
-        print('target_chapters',scope,target_chapters,speed)
-        for i in range(num_nodes_book):
+        print('target_chapters',scope,target_chapters,speed,more)
+        for i in range(num_nodes_book+1):
             current_book_length = len(self.html_overview.xpath("/html/body/div[2]/ul/div[{}]/ul/li".format(offset+i+1)))
             acc_chapters+= current_book_length
+            if scope=='new':
+                print(current_book_length, acc_chapters, target_chapters)
             if acc_chapters>target_chapters:
                 node_index.append(i+1+offset)
                 start_chapter_index.append(target_chapters - (acc_chapters - current_book_length) + 1)
                 end_chapter_index_= start_chapter_index[-1] + speed + more
                 if end_chapter_index_>current_book_length:
                     end_chapter_index.append(current_book_length+1)
-                    if (end_chapter_index_ - current_book_length)<len(self.html_overview.xpath("/html/body/div[2]/ul/div[{}]/ul/li".format(offset+i+1+1))):
+                    if (end_chapter_index_ - current_book_length-1)<=len(self.html_overview.xpath("/html/body/div[2]/ul/div[{}]/ul/li".format(offset+i+1+1))):
                         end_chapter_index.append(end_chapter_index_ - current_book_length)
                         start_chapter_index.append(1)
                     else:
