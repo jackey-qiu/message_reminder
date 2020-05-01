@@ -276,8 +276,6 @@ class MyMainWindow(QMainWindow):
         for i in range(num_nodes_book+1):
             current_book_length = len(self.html_overview.xpath("/html/body/div[2]/ul/div[{}]/ul/li".format(offset+i+1)))
             acc_chapters+= current_book_length
-            if scope=='new':
-                print(current_book_length, acc_chapters, target_chapters)
             if acc_chapters>target_chapters:
                 node_index.append(i+1+offset)
                 start_chapter_index.append(target_chapters - (acc_chapters - current_book_length) + 1)
