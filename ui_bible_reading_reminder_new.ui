@@ -193,7 +193,7 @@
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout_3">
           <item>
-           <spacer name="horizontalSpacer_3">
+           <spacer name="horizontalSpacer_4">
             <property name="orientation">
              <enum>Qt::Horizontal</enum>
             </property>
@@ -206,24 +206,35 @@
            </spacer>
           </item>
           <item>
-           <widget class="QLabel" name="label_2">
-            <property name="font">
-             <font>
-              <pointsize>13</pointsize>
-              <weight>75</weight>
-              <bold>true</bold>
-             </font>
-            </property>
-            <property name="frameShape">
-             <enum>QFrame::Panel</enum>
-            </property>
+           <widget class="QPushButton" name="pushButton_today">
             <property name="text">
-             <string>圣经研读</string>
+             <string>提取今日经文</string>
             </property>
            </widget>
           </item>
           <item>
-           <spacer name="horizontalSpacer_4">
+           <widget class="QPushButton" name="pushButton_check">
+            <property name="text">
+             <string>今日打卡</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="pushButton_before">
+            <property name="text">
+             <string>提取往日经文</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="pushButton_specified">
+            <property name="text">
+             <string>提取指定经文</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_3">
             <property name="orientation">
              <enum>Qt::Horizontal</enum>
             </property>
@@ -318,7 +329,7 @@
           <item>
            <widget class="QLabel" name="label_7">
             <property name="text">
-             <string>读完倒计时</string>
+             <string>读完还需</string>
             </property>
            </widget>
           </item>
@@ -352,80 +363,10 @@
             </property>
            </widget>
           </item>
-          <item>
-           <widget class="QPushButton" name="pushButton_check">
-            <property name="text">
-             <string>今日打卡</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLabel" name="label_check">
-            <property name="frameShape">
-             <enum>QFrame::Box</enum>
-            </property>
-            <property name="frameShadow">
-             <enum>QFrame::Raised</enum>
-            </property>
-            <property name="text">
-             <string>本日经文未读</string>
-            </property>
-            <property name="wordWrap">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
          </layout>
         </item>
         <item>
-         <widget class="Line" name="line_5">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-         </widget>
-        </item>
-        <item>
          <layout class="QHBoxLayout" name="horizontalLayout_5">
-          <item>
-           <widget class="QPushButton" name="pushButton_today">
-            <property name="text">
-             <string>提取今日经文</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="pushButton_before">
-            <property name="text">
-             <string>提取往日经文</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <spacer name="horizontalSpacer_10">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>40</width>
-              <height>20</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
-          <item>
-           <spacer name="horizontalSpacer_11">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>40</width>
-              <height>20</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
           <item>
            <widget class="QLabel" name="label_14">
             <property name="text">
@@ -462,7 +403,36 @@
            </widget>
           </item>
           <item>
-           <spacer name="horizontalSpacer_9">
+           <widget class="Line" name="line">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="label_check">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="frameShape">
+             <enum>QFrame::Box</enum>
+            </property>
+            <property name="frameShadow">
+             <enum>QFrame::Raised</enum>
+            </property>
+            <property name="text">
+             <string>本日经文未读</string>
+            </property>
+            <property name="wordWrap">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_7">
             <property name="orientation">
              <enum>Qt::Horizontal</enum>
             </property>
@@ -473,13 +443,6 @@
              </size>
             </property>
            </spacer>
-          </item>
-          <item>
-           <widget class="Line" name="line">
-            <property name="orientation">
-             <enum>Qt::Vertical</enum>
-            </property>
-           </widget>
           </item>
           <item>
            <widget class="QLabel" name="label_9">
@@ -506,6 +469,13 @@
            </widget>
           </item>
           <item>
+           <widget class="QLabel" name="label_2">
+            <property name="text">
+             <string>从</string>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QLineEdit" name="lineEdit_book_chapter">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -520,7 +490,33 @@
              </size>
             </property>
             <property name="text">
-             <string>1-2</string>
+             <string>1</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="label_12">
+            <property name="text">
+             <string>至</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="lineEdit_book_chapter2">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>60</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>4</string>
             </property>
            </widget>
           </item>
@@ -531,11 +527,104 @@
             </property>
            </widget>
           </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="Line" name="line_4">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_9">
           <item>
-           <widget class="QPushButton" name="pushButton_specified">
+           <widget class="QLabel" name="label_18">
             <property name="text">
-             <string>提取指定经文</string>
+             <string>搜索字段</string>
             </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="lineEdit_key_words">
+            <property name="maximumSize">
+             <size>
+              <width>200</width>
+              <height>16777215</height>
+             </size>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="pushButton_search">
+            <property name="text">
+             <string>搜索</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="label_19">
+            <property name="text">
+             <string>经文显示方式</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QRadioButton" name="radioButton">
+            <property name="text">
+             <string>只显示中文</string>
+            </property>
+            <property name="checked">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QRadioButton" name="radioButton_2">
+            <property name="text">
+             <string>只显示英文</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QRadioButton" name="radioButton_3">
+            <property name="text">
+             <string>中英对照显示</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="label_20">
+            <property name="text">
+             <string>英文版本选择</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QComboBox" name="comboBox">
+            <item>
+             <property name="text">
+              <string>NIV</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>KJV</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>NKJV</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>ASV</string>
+             </property>
+            </item>
            </widget>
           </item>
          </layout>
@@ -548,59 +637,36 @@
          </widget>
         </item>
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_7">
-          <item>
-           <spacer name="horizontalSpacer_7">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>40</width>
-              <height>20</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
-          <item>
-           <widget class="QLabel" name="label_12">
-            <property name="frameShape">
-             <enum>QFrame::Panel</enum>
-            </property>
-            <property name="text">
-             <string>经文区域</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <spacer name="horizontalSpacer_8">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>40</width>
-              <height>20</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <widget class="QTextBrowser" name="textBrowser_bible">
-          <property name="font">
-           <font>
-            <pointsize>14</pointsize>
-           </font>
+         <widget class="QTabWidget" name="tabWidget">
+          <property name="currentIndex">
+           <number>1</number>
           </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="Line" name="line_4">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
+          <widget class="QWidget" name="tab">
+           <attribute name="title">
+            <string>经文显示</string>
+           </attribute>
+           <layout class="QHBoxLayout" name="horizontalLayout_11">
+            <item>
+             <widget class="QTextBrowser" name="textBrowser_bible">
+              <property name="font">
+               <font>
+                <pointsize>14</pointsize>
+               </font>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+          <widget class="QWidget" name="tab_2">
+           <attribute name="title">
+            <string>搜索结果</string>
+           </attribute>
+           <layout class="QHBoxLayout" name="horizontalLayout_12">
+            <item>
+             <widget class="QTextBrowser" name="textBrowser_search_results"/>
+            </item>
+           </layout>
+          </widget>
          </widget>
         </item>
         <item>
@@ -628,7 +694,10 @@
           <item>
            <widget class="QLabel" name="label_11">
             <property name="frameShape">
-             <enum>QFrame::WinPanel</enum>
+             <enum>QFrame::NoFrame</enum>
+            </property>
+            <property name="frameShadow">
+             <enum>QFrame::Raised</enum>
             </property>
             <property name="text">
              <string>读经笔记</string>
