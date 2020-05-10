@@ -464,7 +464,7 @@
           <item>
            <widget class="QLineEdit" name="lineEdit_book">
             <property name="text">
-             <string>创世纪</string>
+             <string>创世记</string>
             </property>
            </widget>
           </item>
@@ -570,7 +570,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QRadioButton" name="radioButton">
+           <widget class="QRadioButton" name="radioButton_cn">
             <property name="text">
              <string>只显示中文</string>
             </property>
@@ -580,14 +580,14 @@
            </widget>
           </item>
           <item>
-           <widget class="QRadioButton" name="radioButton_2">
+           <widget class="QRadioButton" name="radioButton_eng">
             <property name="text">
              <string>只显示英文</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QRadioButton" name="radioButton_3">
+           <widget class="QRadioButton" name="radioButton_cn_eng">
             <property name="text">
              <string>中英对照显示</string>
             </property>
@@ -604,7 +604,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QComboBox" name="comboBox">
+           <widget class="QComboBox" name="comboBox_bible_version">
             <item>
              <property name="text">
               <string>NIV</string>
@@ -663,7 +663,13 @@
            </attribute>
            <layout class="QHBoxLayout" name="horizontalLayout_12">
             <item>
-             <widget class="QTextBrowser" name="textBrowser_search_results"/>
+             <widget class="QTextBrowser" name="textBrowser_search_results">
+              <property name="font">
+               <font>
+                <pointsize>15</pointsize>
+               </font>
+              </property>
+             </widget>
             </item>
            </layout>
           </widget>

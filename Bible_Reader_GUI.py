@@ -11,6 +11,7 @@ from whoosh import fields
 from whoosh.index import open_dir
 import urllib,random
 from urllib.parse import quote
+from urllib.request import Request
 import string
 from lxml import etree
 import datetime,time
@@ -33,6 +34,74 @@ except:
 msg_path = locate_path.module_path_locator()
 analyzer = ChineseAnalyzer()
 print(msg_path)
+
+bible_book_english=\
+['genesis',
+ 'exodus',
+ 'leviticus',
+ 'numbers',
+ 'deuteronomy',
+ 'joshua',
+ 'judges',
+ 'ruth',
+ '1-samuel',
+ '2-samuel',
+ '1-kings',
+ '2-kings',
+ '1-chronicles',
+ '2-chronicles',
+ 'ezra',
+ 'nehemiah',
+ 'esther',
+ 'job',
+ 'psalms',
+ 'proverbs',
+ 'ecclesiastes',
+ 'song-of-solomon',
+ 'isaiah',
+ 'jeremiah',
+ 'lamentations',
+ 'ezekiel',
+ 'daniel',
+ 'hosea',
+ 'joel',
+ 'amos',
+ 'obadiah',
+ 'jonah',
+ 'micah',
+ 'nahum',
+ 'habakkuk',
+ 'zephaniah',
+ 'haggai',
+ 'zechariah',
+ 'malachi',
+ 'matthew',
+ 'mark',
+ 'luke',
+ 'john',
+ 'acts',
+ 'romans',
+ '1-corinthians',
+ '2-corinthians',
+ 'galatians',
+ 'ephesians',
+ 'philippians',
+ 'colossians',
+ '1-thessalonians',
+ '2-thessalonians',
+ '1-timothy',
+ '2-timothy',
+ 'titus',
+ 'philemon',
+ 'hebrews',
+ 'james',
+ '1-peter',
+ '2-peter',
+ '1-john',
+ '2-john',
+ '3-john',
+ 'jude',
+ 'revelation']
 
 bible_books = \
 ['创世记',
@@ -102,22 +171,6 @@ bible_books = \
  '犹大书',
  '启示录']
 
-
-def test():
-    schema = Schema(title=fields.TEXT(stored=True), path=fields.ID(stored=True), content=fields.TEXT(stored=True))
-    ix = create_in(".", schema)
-    writer = ix.writer()
-    writer.add_document(title=u"First document", path=u"/a",
-                        content=u"This is the 耶稣first document we've added!")
-    writer.add_document(title=u"Second document", path=u"/b",
-                        content=u"The second one is even more interesting!")
-    writer.commit()
-    from whoosh.qparser import QueryParser
-    with ix.searcher() as searcher:
-        query = QueryParser("content", ix.schema).parse("耶稣")
-        results = searcher.search(query)
-        print(results[0])
-
 def search_bible(file = 'chinese_bible.json',phrase = ''):
     hit_book, hit_verse, hit_chapter = [],[],[]
     if phrase == '':
@@ -147,6 +200,72 @@ def search_bible(file = 'chinese_bible.json',phrase = ''):
             hit_chapter.append(each['chapter'])
             hit_verse.append(each['verse'])
         return zip(hit_book,hit_chapter,hit_verse)
+
+def craw_english_bible_to_json_file(file='english_bible.json',version_tag='niv',books = bible_book_english):
+    bible_content = {}
+    file = file.replace('.json','_{}.json'.format(version_tag))
+    try:
+        with open(file,'r') as f:
+            bible_content =  json.load(f)
+    except:
+        pass
+    global current_book
+    current_book = books[0]
+    
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.3'}
+    if version_tag == 'niv':
+        html_link_head = "https://www.biblestudytools.com"
+    else:
+        html_link_head = "https://www.biblestudytools.com/"+version_tag
+
+    def _get_chapter(books):
+        hit = 0
+        for book in books:
+            global current_book
+            current_book = book
+            if book not in bible_content:
+                bible_content[book] = {}
+            i=1
+            while True:
+                html_link_temp = html_link_head+'/{}/{}.html'.format(book,i)
+                succed = False
+                for j in range(10):#try request the html at maximum 10 times
+                    try:
+                        bible_content[book][str(i)] = {}
+                        r= Request(html_link_temp,headers=headers)
+                        url_temp = urllib.request.urlopen(r)
+                        html= etree.HTML(url_temp.read())
+                        succed = True
+                        break
+                    except:
+                        pass
+                if not succed:
+                    break
+                verses = []
+                for jj in range(1,2000):
+                    verse_temp = ''.join(html.xpath('//*[@id="v-{}"]/span[2]/text()'.format(jj)))
+                    if verse_temp == '':
+                        break
+                    else:
+                        verses.append(verse_temp)
+                verses = [each.rstrip().lstrip() for each in verses]
+                for ii in range(len(verses)):
+                    bible_content[book][str(i)][str(ii+1)] = verses[ii] 
+                i = i + 1
+                hit = hit +1
+                print("crawing {} chapter {} now!".format(book,i))
+                if hit == 100:
+                    time.sleep(10)
+                    with open(file,'w') as outfile:
+                        json.dump(bible_content,outfile)
+                    hit = 0
+        with open(file,'w') as outfile:
+            json.dump(bible_content,outfile)
+        return current_book
+
+    while current_book!=books[-1]:
+        print(current_book)
+        current_book = _get_chapter(books[books.index(current_book):])
 
 def craw_all_chapters_to_json_file(file=None,books = bible_books[61:]):
     bible_content = {}
@@ -229,6 +348,9 @@ class MyMainWindow(QMainWindow):
         with open(os.path.join(msg_path,'chinese_bible.json'),'r') as f:
             self.bible_chinese_json = json.load(f)
 
+        self.bible_english_json_NIV = ''
+        with open(os.path.join(msg_path,'english_bible_niv.json'),'r') as f:
+            self.bible_english_json_NIV = json.load(f)
         self.bible_today_tag = ""
         self.today_date = None
         self.spring_desert_date = None
@@ -276,6 +398,13 @@ class MyMainWindow(QMainWindow):
         self.textBrowser_scripture.setText(''.join(['\n','1.',s1,'\n\n','2.',s2])) 
 
     def search_bible(self):
+        chinese = '\u4e00'<=self.lineEdit_key_words.text()[0]<='\u9fa5' 
+        if chinese:
+            self.search_bible_chinese()
+        else:
+            self.search_bible_english()
+
+    def search_bible_chinese(self):
         phrase = self.lineEdit_key_words.text()
         hit_book, hit_verse, hit_chapter = [],[],[]
         if phrase == '':
@@ -315,6 +444,47 @@ class MyMainWindow(QMainWindow):
             cursor.insertHtml('''<p><span style="color: blue;size:15;">{} <br></span>'''.format(" "))
             self.textBrowser_search_results.setText(''.join(search_results)) 
 
+    def search_bible_english(self):
+        phrase = self.lineEdit_key_words.text()
+        bible_version = self.comboBox_bible_version.currentText()
+        hit_book, hit_verse, hit_chapter = [],[],[]
+        bible_english_json = eval('self.bible_english_json_{}'.format(bible_version))
+        if phrase == '':
+            return
+        bible_content = eval('self.bible_english_json_{}'.format(bible_version))
+        if not os.path.exists(os.path.join(msg_path,"index_{}".format(bible_version))):
+            schema = Schema(book_name=fields.TEXT(stored=True), chapter=fields.TEXT(stored=True), verse = fields.TEXT(stored=True),content=fields.TEXT)
+            os.mkdir(os.path.join(msg_path,"index_{}".format(bible_version)))
+            ix = create_in(os.path.join(msg_path,"index_{}".format(bible_version)), schema)
+            writer = ix.writer()
+            for book in bible_content:
+                for chapter in bible_content[book]:
+                    for verse in bible_content[book][chapter]:
+                        writer.add_document(book_name=book, chapter=chapter, verse = verse,
+                            content=bible_content[book][chapter][verse])
+            writer.commit()
+        else:
+            ix = open_dir(os.path.join(msg_path,"index_{}".format(bible_version)))
+            ix.writer().commit()
+        with ix.searcher() as searcher:
+            query = QueryParser("content", ix.schema).parse(phrase)
+            results = searcher.search(query,limit = None)
+            for each in results:
+                hit_book.append(each['book_name'])
+                hit_chapter.append(each['chapter'])
+                hit_verse.append(each['verse'])
+            results_pd = pd.DataFrame({'book':hit_book,'chapter':hit_chapter,'verse':hit_verse})
+            results_pd = results_pd.sort_values(['book','chapter','verse'])
+            hit_book, hit_chapter, hit_verse = list(results_pd['book']),list(results_pd['chapter']),list(results_pd['verse'])
+            search_results = []
+            for i in range(len(hit_book)):
+                search_results.append('{}.[{}]({}:{}):{}\n\n'.format(i+1,hit_book[i],hit_chapter[i],hit_verse[i],\
+                                       bible_english_json[hit_book[i]][hit_chapter[i]][hit_verse[i]]))
+            self.textBrowser_search_results.clear()
+            cursor = self.textBrowser_search_results.textCursor()
+            cursor.insertHtml('''<p><span style="color: blue;size:15;">{} <br></span>'''.format(" "))
+            self.textBrowser_search_results.setText(''.join(search_results)) 
+
     def check_read_or_not(self):
         today = datetime.date.today()
         y,m,d = today.year, today.month, today.day
@@ -344,7 +514,7 @@ class MyMainWindow(QMainWindow):
             text_to_write = '{}  {}'.format(self.spinBox_more_old.value(),self.spinBox_more_new.value())
             f.write(text_to_write)
 
-    def get_scripture_specified(self):
+    def get_scripture_specified_english(self):
         chapter_content = []
         book = self.lineEdit_book.text()
         if book not in bible_books:
@@ -352,28 +522,113 @@ class MyMainWindow(QMainWindow):
                 if sum([int(each_charater in each) for each_charater in book])==len(book):
                     book = each
                     break
+        book = bible_book_english[bible_books.index(book)]
         #assert book in bible_books,'something is wrong about typed book name!'
         # book = 'Genesis'
         chapters_bounds = [int(self.lineEdit_book_chapter.text()),int(self.lineEdit_book_chapter2.text())]
         chapters = range(chapters_bounds[0],chapters_bounds[1]+1)
         for chapter in chapters:
-            url = quote("http://mobile.chinesebibleonline.com/book/{}/{}".format(book,chapter),safe=string.printable)
-            sock_temp =urllib.request.urlopen(url)
-            html_temp = etree.HTML(sock_temp.read())
-            sock_temp.close()
-            book_name = ["\n《{}》第{}章\n".format(book,chapter)]
-            try:
-                scriptures = html_temp.xpath("/html/body/div[2]/div/span[2]/text()")
-                verse_number = html_temp.xpath("/html/body/div[2]/div/span[1]/text()")
-                combined = [verse_number[ii].rstrip()+scriptures[ii]+'\n' for ii in range(len(scriptures))]
-                chapter_content = chapter_content + book_name + combined
-            except:
+            current_content = ['<{}>Chapter{}'.format(book,chapter)]+list(self.bible_english_json_NIV[book][str(chapter)].values())
+            for i in range(len(current_content)):
+                if i!=0:
+                    chapter_content.append('{}{}'.format(i,current_content[i]))
+                else:
+                   chapter_content.append('{}'.format(current_content[i])) 
+        return chapter_content
+
+    def get_scripture_specified(self):
+        chapter_content_eng = []
+        chapter_content = []
+        if self.radioButton_eng.isChecked() or self.radioButton_cn_eng.isChecked():
+            chapter_content_eng = self.get_scripture_specified_english()
+        if self.radioButton_cn_eng.isChecked() or self.radioButton_cn.isChecked():
+            book = self.lineEdit_book.text()
+            if book not in bible_books:
+                for each in bible_books:
+                    if sum([int(each_charater in each) for each_charater in book])==len(book):
+                        book = each
+                        break
+            #assert book in bible_books,'something is wrong about typed book name!'
+            # book = 'Genesis'
+            chapters_bounds = [int(self.lineEdit_book_chapter.text()),int(self.lineEdit_book_chapter2.text())]
+            chapters = range(chapters_bounds[0],chapters_bounds[1]+1)
+            for chapter in chapters:
+                url = quote("http://mobile.chinesebibleonline.com/book/{}/{}".format(book,chapter),safe=string.printable)
+                sock_temp =urllib.request.urlopen(url)
+                html_temp = etree.HTML(sock_temp.read())
+                sock_temp.close()
+                book_name = ["《{}》第{}章".format(book,chapter)]
+                try:
+                    scriptures = html_temp.xpath("/html/body/div[2]/div/span[2]/text()")
+                    verse_number = html_temp.xpath("/html/body/div[2]/div/span[1]/text()")
+                    combined = [verse_number[ii].rstrip()+scriptures[ii].rstrip() for ii in range(len(scriptures))]
+                    chapter_content = chapter_content + book_name + combined
+                except:
+                    pass
+        chapter_content_all = []
+        if len(chapter_content_eng)==0 or len(chapter_content)==0:
+            chapter_content_all = chapter_content_eng + chapter_content
+            chapter_content_all = [each+'\n' for each in chapter_content_all]
+        else:
+            if len(chapter_content)>len(chapter_content_eng):
+                chapter_content_eng = chapter_content_eng + (len(chapter_content)-len(chapter_content_eng))*['\n']
+            elif len(chapter_content)<len(chapter_content_eng):
+                chapter_content = chapter_content + (len(chapter_content_eng)-len(chapter_content))*['\n'] 
+            else:
                 pass
+            chapter_content_all_ = list(zip(chapter_content,chapter_content_eng))
+            for each_ in chapter_content_all_:
+                chapter_content_all.append(each_[0])
+                chapter_content_all.append(each_[1]+'\n')
+
         self.textBrowser_bible.clear()
         cursor = self.textBrowser_bible.textCursor()
         cursor.insertHtml('''<p><span style="color: blue;size:15;">{} <br></span>'''.format(" "))
-        self.textBrowser_bible.setText(''.join(chapter_content)) 
+        self.textBrowser_bible.setText('\n'.join(chapter_content_all)) 
         
+    def _get_book_chapters(self,days_elapsed =0, speed = 2, offset = 0, plan_type = 'all'):
+        hit_book, hit_chapter = [], []
+        total_chapter_read = days_elapsed * speed + offset
+        if plan_type == 'all':
+            chapters_accum = 0
+            for each in bible_books:
+                current_book_chapters = len(self.bible_chinese_json[each])
+                if chapters_accum+current_book_chapters<=total_chapter_read:
+                    chapters_accum = chapters_accum + current_book_chapters
+                else:
+                    hit_book.append(each)
+                    hit_chapter.append(total_chapter_read-chapters_accum+1)
+                    break
+            chapters_accum = 0
+            for each in bible_books:
+                current_book_chapters = len(self.bible_chinese_json[each])
+                if chapters_accum+current_book_chapters<=(total_chapter_read+speed-1):
+                    chapters_accum = chapters_accum + current_book_chapters
+                else:
+                    hit_book.append(each)
+                    hit_chapter.append(total_chapter_read+speed-1-chapters_accum+1)
+                    break
+            if hit_book[0]==hit_book[1]:
+                hit_chapter=list(range(hit_chapter[0],hit_chapter[1]+1))
+                hit_book = [hit_book[0]]*speed
+            else:
+                num_books_in_between = bible_books.index(hit_book[1]) - bible_books.index(hit_book[0])
+                books_in_between = bible_books[(bible_books.index(hit_book[0])+1):(bible_books.index(hit_book[1])+num_books_in_between+1)]
+                books_in_between_all =[]
+                chapters_in_between_all = []
+                for each in books_in_between:
+                    books_in_between_all=books_in_between_all+[each]*len(bible_books[each])
+                    chapters_in_between_all=chapters_in_between_all+list(range(1,len(bible_books[each])+1)
+                hit_book = [hit_book[0]]*(len(bible_books[hit_book[0]])-hit_chapter[0]+1)+[books_in_between_all]+[hit_book[1]]*hit_chapter[1]
+                hit_chapter = list(range(hit_chapter[0],len(bible_books[hit_book[0]]+1)))+chapters_in_between_all+list(range(1,hit_chapter[1]+1))
+            return hit_book,hit_chapter
+            
+            
+
+    def get_scripture_for_today_local_disk(self):
+        pass
+
+
     def get_scripture_for_today(self):
         books = []
         chapters = []
@@ -394,14 +649,14 @@ class MyMainWindow(QMainWindow):
             else:
                 chapter_content_old = self.craw_bible_chapters(scope='old',speed = speed_old)
             if chapter_content_new=='End':
-                chapter_content_new = '\n'
+                chapter_content_new = ['\n']
             chapter_content = chapter_content_old + chapter_content_new
 
         self.textBrowser_bible.clear()
-        chapter_content = ['------------------------------------------------------------------------------------------------------------------------------------------------\n'] + chapter_content
+        chapter_content = ['--------------------------------------------------------------------------------------------------------------------------------------------\n'] + chapter_content
         cursor = self.textBrowser_bible.textCursor()
         cursor.insertHtml('''<p><span style="color: blue;size:15;">{} <br></span>'''.format(" "))
-        self.textBrowser_bible.setText(''.join(chapter_content)) 
+        self.textBrowser_bible.setText('\n'.join(chapter_content)) 
 
     def craw_bible_chapters(self,scope = 'all',speed=2, more = 0):
         offset = 0
@@ -467,11 +722,11 @@ class MyMainWindow(QMainWindow):
                 sock_temp =urllib.request.urlopen(url)
                 html_temp = etree.HTML(sock_temp.read())
                 sock_temp.close()
-                book_name = ["\n《{}》第{}章\n".format(html_temp.xpath("/html/body/div[2]/div[1]/text()")[0],j)]
+                book_name = ["《{}》第{}章".format(html_temp.xpath("/html/body/div[2]/div[1]/text()")[0],j)]
                 try:
                     scriptures = html_temp.xpath("/html/body/div[2]/div/span[2]/text()")
                     verse_number = html_temp.xpath("/html/body/div[2]/div/span[1]/text()")
-                    combined = [verse_number[ii].rstrip()+scriptures[ii]+'\n' for ii in range(len(scriptures))]
+                    combined = [verse_number[ii].rstrip()+scriptures[ii].rstrip() for ii in range(len(scriptures))]
                     chapter_content = chapter_content + book_name + combined
                 except:
                     pass
