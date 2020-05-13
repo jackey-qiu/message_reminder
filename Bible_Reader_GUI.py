@@ -21,7 +21,7 @@ import smtplib
 from email.mime.text import MIMEText
 from wxpy import *
 import sys,os
-from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QGraphicsScene
+from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QGraphicsScene, QPlainTextEdit
 from PyQt5.QtCore import QDate, Qt
 from PyQt5.QtGui import QPixmap
 from PyQt5 import uic
@@ -201,7 +201,54 @@ def search_bible(file = 'chinese_bible.json',phrase = ''):
             hit_verse.append(each['verse'])
         return zip(hit_book,hit_chapter,hit_verse)
 
-def craw_english_bible_to_json_file(file='english_bible.json',version_tag='niv',books = bible_book_english):
+def crawl_english_bible_to_json_file_2(file='english_bible.json',version_tag = 'niv', start_link=''):
+    file = file.replace('.json','_{}.json'.format(version_tag))
+    beginning_link = "https://www.biblica.com/bible/{}/genesis/1/".format(version_tag)
+    if start_link == '':
+        start_link = beginning_link
+    bible_content = {}
+    with open(file,'r') as f:
+        bible_content =  json.load(f)
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.3'}
+    next_link = start_link
+    def _get_chapter(link = start_link):
+        r= Request(link,headers=headers)
+        url_temp = urllib.request.urlopen(r)
+        html= etree.HTML(url_temp.read())
+        book = link.rsplit('/')[-3]
+        chapter = link.rsplit('/')[-2]
+        next_link = html.xpath('//*[@id="online-bible"]/div[2]/div/div/div/div[4]/a[2]/@href')[0]
+        verses_current_chapter = html.xpath('//*[contains(@id,"verse-")]/text()')
+        return book, chapter, verses_current_chapter, next_link
+
+    while True:
+        try:
+            book, chapter_number, chapters, next_link = _get_chapter(next_link)
+        except:
+            print('Save json file now!')
+            with open(file,'w') as outfile:
+                json.dump(bible_content,outfile)
+            print('failure, wait for 10 s')
+            time.sleep(10)
+            book, chapter_number, chapters, next_link = _get_chapter(next_link)
+
+        if next_link == beginning_link:
+            if book not in bible_content:
+                bible_content[book] = {}
+            bible_content[book][chapter_number] = dict(zip(range(1,len(chapters)+1),chapters))
+            print('crawling {} chapter {}'.format(book,chapter_number))
+            print('Save json file now!')
+            with open(file,'w') as outfile:
+                json.dump(bible_content,outfile)
+            break
+        else:
+            if book not in bible_content:
+                bible_content[book] = {}
+            bible_content[book][chapter_number] = dict(zip(range(1,len(chapters)+1),chapters))
+            print('crawling {} chapter {}'.format(book,chapter_number))
+
+
+def crawl_english_bible_to_json_file(file='english_bible.json',version_tag='niv',books = bible_book_english):
     bible_content = {}
     file = file.replace('.json','_{}.json'.format(version_tag))
     try:
@@ -327,6 +374,10 @@ class MyMainWindow(QMainWindow):
         super(MyMainWindow, self).__init__(parent)
         #pg.mkQApp()
         uic.loadUi(os.path.join(msg_path,'ui_bible_reading_reminder_new.ui'),self)
+        self.plainTextEdit.setStyleSheet(
+                        """QPlainTextEdit {background-color: #FFFFFF;
+                           color: #3300CC;}""")
+
         self.setWindowTitle('Bible Reader')
         sock = urllib.request.urlopen("http://mobile.chinesebibleonline.com/bible")  
         self.html_overview = etree.HTML(sock.read())
@@ -348,9 +399,9 @@ class MyMainWindow(QMainWindow):
         with open(os.path.join(msg_path,'chinese_bible.json'),'r') as f:
             self.bible_chinese_json = json.load(f)
 
-        self.bible_english_json_NIV = ''
-        with open(os.path.join(msg_path,'english_bible_niv.json'),'r') as f:
-            self.bible_english_json_NIV = json.load(f)
+        self.bible_english_json = ''
+        self.update_bible_version()
+
         self.bible_today_tag = ""
         self.today_date = None
         self.spring_desert_date = None
@@ -387,6 +438,20 @@ class MyMainWindow(QMainWindow):
         self.spinBox_more_old.valueChanged.connect(self.update_extra_chapter_number)
         self.comboBox_book.currentIndexChanged.connect(self.set_bible_book)
         self.comboBox_plan.currentIndexChanged.connect(self.update_reading_plan)
+        self.comboBox_bible_version.currentIndexChanged.connect(self.update_bible_version)
+        self.pushButton_show_notes.clicked.connect(self.show_note_panel)
+        self.pushButton_hide_notes.clicked.connect(self.hide_note_panel)
+
+    def show_note_panel(self):
+        self.widget_notes.show()
+
+    def hide_note_panel(self):
+        self.widget_notes.hide()
+
+    def update_bible_version(self):
+        bible_version = self.comboBox_bible_version.currentText()
+        with open(os.path.join(msg_path,'english_bible_{}.json'.format(bible_version)),'r') as f:
+            self.bible_english_json = json.load(f)
 
     def get_golden_scripture(self):
         index1,index2 = randint(0,len(self.scripture_list)),randint(0,len(self.scripture_list))
@@ -394,10 +459,12 @@ class MyMainWindow(QMainWindow):
         s1,s2 = "".join(s1[1:]),"".join(s2[1:])
         self.textBrowser_scripture.clear()
         cursor = self.textBrowser_scripture.textCursor()
-        cursor.insertHtml('''<p><span style="color: red;size:15;">{} <br></span>'''.format(" "))
+        cursor.insertHtml('''<p><span style="color: red;">{} <br></span>'''.format(" "))
         self.textBrowser_scripture.setText(''.join(['\n','1.',s1,'\n\n','2.',s2])) 
 
     def search_bible(self):
+        if self.lineEdit_key_words.text()=='':
+            return
         chinese = '\u4e00'<=self.lineEdit_key_words.text()[0]<='\u9fa5' 
         if chinese:
             self.search_bible_chinese()
@@ -441,27 +508,27 @@ class MyMainWindow(QMainWindow):
 
             self.textBrowser_search_results.clear()
             cursor = self.textBrowser_search_results.textCursor()
-            cursor.insertHtml('''<p><span style="color: blue;size:15;">{} <br></span>'''.format(" "))
+            cursor.insertHtml('''<p><span style="color: blue;">{} <br></span>'''.format(" "))
             self.textBrowser_search_results.setText(''.join(search_results)) 
 
     def search_bible_english(self):
         phrase = self.lineEdit_key_words.text()
         bible_version = self.comboBox_bible_version.currentText()
         hit_book, hit_verse, hit_chapter = [],[],[]
-        bible_english_json = eval('self.bible_english_json_{}'.format(bible_version))
+        #bible_english_json = self.bible_english_json
         if phrase == '':
             return
-        bible_content = eval('self.bible_english_json_{}'.format(bible_version))
+        #bible_content = self.bibe_english_json
         if not os.path.exists(os.path.join(msg_path,"index_{}".format(bible_version))):
             schema = Schema(book_name=fields.TEXT(stored=True), chapter=fields.TEXT(stored=True), verse = fields.TEXT(stored=True),content=fields.TEXT)
             os.mkdir(os.path.join(msg_path,"index_{}".format(bible_version)))
             ix = create_in(os.path.join(msg_path,"index_{}".format(bible_version)), schema)
             writer = ix.writer()
-            for book in bible_content:
-                for chapter in bible_content[book]:
-                    for verse in bible_content[book][chapter]:
+            for book in self.bible_english_json:
+                for chapter in self.bible_english_json[book]:
+                    for verse in self.bible_english_json[book][chapter]:
                         writer.add_document(book_name=book, chapter=chapter, verse = verse,
-                            content=bible_content[book][chapter][verse])
+                            content=self.bible_english_json[book][chapter][verse])
             writer.commit()
         else:
             ix = open_dir(os.path.join(msg_path,"index_{}".format(bible_version)))
@@ -479,10 +546,10 @@ class MyMainWindow(QMainWindow):
             search_results = []
             for i in range(len(hit_book)):
                 search_results.append('{}.[{}]({}:{}):{}\n\n'.format(i+1,hit_book[i],hit_chapter[i],hit_verse[i],\
-                                       bible_english_json[hit_book[i]][hit_chapter[i]][hit_verse[i]]))
+                                       self.bible_english_json[hit_book[i]][hit_chapter[i]][hit_verse[i]]))
             self.textBrowser_search_results.clear()
             cursor = self.textBrowser_search_results.textCursor()
-            cursor.insertHtml('''<p><span style="color: blue;size:15;">{} <br></span>'''.format(" "))
+            cursor.insertHtml('''<p><span style="color: blue;">{} <br></span>'''.format(" "))
             self.textBrowser_search_results.setText(''.join(search_results)) 
 
     def check_read_or_not(self):
@@ -528,7 +595,10 @@ class MyMainWindow(QMainWindow):
         chapters_bounds = [int(self.lineEdit_book_chapter.text()),int(self.lineEdit_book_chapter2.text())]
         chapters = range(chapters_bounds[0],chapters_bounds[1]+1)
         for chapter in chapters:
-            current_content = ['<{}>Chapter{}'.format(book,chapter)]+list(self.bible_english_json_NIV[book][str(chapter)].values())
+            try:
+                current_content = ['<{}>Chapter{}'.format(book,chapter)]+list(self.bible_english_json[book][str(chapter)].values())
+            except:
+                return chapter_content
             for i in range(len(current_content)):
                 if i!=0:
                     chapter_content.append('{}{}'.format(i,current_content[i]))
@@ -583,7 +653,7 @@ class MyMainWindow(QMainWindow):
 
         self.textBrowser_bible.clear()
         cursor = self.textBrowser_bible.textCursor()
-        cursor.insertHtml('''<p><span style="color: blue;size:15;">{} <br></span>'''.format(" "))
+        cursor.insertHtml('''<p><span style="color: blue;">{} <br></span>'''.format(" "))
         self.textBrowser_bible.setText('\n'.join(chapter_content_all)) 
         
     def _get_book_chapters(self,days_elapsed =0, speed = 2, offset = 0, plan_type = 'all'):
@@ -618,7 +688,7 @@ class MyMainWindow(QMainWindow):
                 chapters_in_between_all = []
                 for each in books_in_between:
                     books_in_between_all=books_in_between_all+[each]*len(bible_books[each])
-                    chapters_in_between_all=chapters_in_between_all+list(range(1,len(bible_books[each])+1)
+                    chapters_in_between_all=chapters_in_between_all+list(range(1,len(bible_books[each])+1))
                 hit_book = [hit_book[0]]*(len(bible_books[hit_book[0]])-hit_chapter[0]+1)+[books_in_between_all]+[hit_book[1]]*hit_chapter[1]
                 hit_chapter = list(range(hit_chapter[0],len(bible_books[hit_book[0]]+1)))+chapters_in_between_all+list(range(1,hit_chapter[1]+1))
             return hit_book,hit_chapter
@@ -653,10 +723,10 @@ class MyMainWindow(QMainWindow):
             chapter_content = chapter_content_old + chapter_content_new
 
         self.textBrowser_bible.clear()
-        chapter_content = ['--------------------------------------------------------------------------------------------------------------------------------------------\n'] + chapter_content
+        # chapter_content = ['--------------------------------------------------------------------------------------------------------------------------------------------\n'] + chapter_content
         cursor = self.textBrowser_bible.textCursor()
-        cursor.insertHtml('''<p><span style="color: blue;size:15;">{} <br></span>'''.format(" "))
-        self.textBrowser_bible.setText('\n'.join(chapter_content)) 
+        cursor.insertHtml('''<p><span style="color: blue;">{} <br></span>'''.format(" "))
+        self.textBrowser_bible.setText('\n\n'.join(chapter_content)) 
 
     def craw_bible_chapters(self,scope = 'all',speed=2, more = 0):
         offset = 0
@@ -744,7 +814,7 @@ class MyMainWindow(QMainWindow):
         for each in content:
             each=each+'\n'
             cursor = self.textBrowser.textCursor()
-            cursor.insertHtml('''<p><span style="color: green;size:15;">{} <br></span>'''.format(each))
+            cursor.insertHtml('''<p><span style="color: green;">{} <br></span>'''.format(each))
         # self.textBrowser.setText('\n'.join(content))
 
     def update_reading_plan(self):
@@ -796,6 +866,9 @@ class MyMainWindow(QMainWindow):
                     f.write("\n\n{}月{}月{}日\n".format(y,m,d))
                     # f.write("{}-{}-{}\n".format(y,m,d))
                     f.write(self.plainTextEdit.toPlainText())
+            
+            self.statusbar.clearMessage()
+            self.statusbar.showMessage("读经笔记保存成功！")
         else:
             pass
 
@@ -821,6 +894,8 @@ class MyMainWindow(QMainWindow):
                     f.write("\n\n{}月{}月{}日\n".format(y,m,d))
                     # f.write("{}-{}-{}\n".format(y,m,d))
                     f.write(self.textBrowser_scripture.toPlainText())
+            self.statusbar.clearMessage()
+            self.statusbar.showMessage("今日金句保存成功！")
         else:
             pass
 
