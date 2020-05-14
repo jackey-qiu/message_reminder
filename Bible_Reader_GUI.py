@@ -427,6 +427,7 @@ class MyMainWindow(QMainWindow):
         super(MyMainWindow, self).__init__(parent)
         #pg.mkQApp()
         uic.loadUi(os.path.join(msg_path,'ui_bible_reading_reminder_new2.ui'),self)
+        self.load_reading_plan()
         self.plainTextEdit.setStyleSheet(
                         """QPlainTextEdit {background-color: #FFFFFF;
                            color: #3300CC;}""")
@@ -468,12 +469,13 @@ class MyMainWindow(QMainWindow):
         # self.update_reading_plan()
         self.update_count_down_time()
         self.get_spring_desert_article()
-        self.load_extra_chapter_number()
+        # self.load_extra_chapter_number()
         self.check_read_or_not()
 
         #signal-slot-pair connection
         self.calendarWidget.selectionChanged.connect(self.get_spring_desert_article)
         self.pushButton_today.clicked.connect(self.update_count_down_time_today)
+        self.pushButton_save_plan.clicked.connect(self.update_reading_plan)
         #self.pushButton_today.clicked.connect(self.get_scripture_for_today)
         self.pushButton_today.clicked.connect(self.get_scripture_for_today_local_disk)
         self.pushButton_specified.clicked.connect(self.get_scripture_specified)
@@ -490,8 +492,8 @@ class MyMainWindow(QMainWindow):
         self.pushButton_search.clicked.connect(self.search_bible)
         self.spinBox_start_date.valueChanged.connect(self.update_count_down_time)
         self.spinBox_start_month.valueChanged.connect(self.update_count_down_time)
-        self.spinBox_more_new.valueChanged.connect(self.update_extra_chapter_number)
-        self.spinBox_more_old.valueChanged.connect(self.update_extra_chapter_number)
+        # self.spinBox_more_new.valueChanged.connect(self.update_extra_chapter_number)
+        # self.spinBox_more_old.valueChanged.connect(self.update_extra_chapter_number)
         self.comboBox_book.currentIndexChanged.connect(self.set_bible_book)
         # self.comboBox_plan.currentIndexChanged.connect(self.update_reading_plan)
         self.comboBox_bible_version.currentIndexChanged.connect(self.update_bible_version)
@@ -637,6 +639,32 @@ class MyMainWindow(QMainWindow):
             text_to_write = '{}  {}'.format(self.spinBox_more_old.value(),self.spinBox_more_new.value())
             f.write(text_to_write)
 
+    def load_reading_plan(self):
+        with open(os.path.join(msg_path,'current_read_plan.txt'),'r') as f:
+            lines = f.readlines()
+            for each in lines:
+                items = each.rstrip().rsplit()
+                if items[0] == 'read_order':
+                   self.checkBox_order.setChecked(eval(items[1])) 
+                elif items[0] == 'offset':
+                    self.spinBox_more_old.setValue(eval(items[1]))
+                    self.spinBox_more_new.setValue(eval(items[2]))
+                elif items[0] == 'speed':
+                    self.spinBox_old.setValue(eval(items[1]))
+                    self.spinBox_new.setValue(eval(items[2]))
+                elif items[0] == 'begin':
+                    self.spinBox_start_month.setValue(eval(items[1]))
+                    self.spinBox_start_date.setValue(eval(items[2]))
+
+    def update_reading_plan(self):
+        with open(os.path.join(msg_path,'current_read_plan.txt'),'w') as f:
+            f.write('read_order {}\n'.format(self.checkBox_order.isChecked()))
+            f.write('offset {}  {}\n'.format(self.spinBox_more_old.value(),self.spinBox_more_new.value()))
+            f.write('speed {}  {}\n'.format(self.spinBox_old.value(),self.spinBox_new.value()))
+            f.write('begin {}  {}\n'.format(self.spinBox_start_month.value(),self.spinBox_start_date.value()))
+        self.statusbar.clearMessage()
+        self.statusbar.showMessage("读经计划保存成功！")
+
     def get_scripture_specified_english(self):
         chapter_content = []
         book = self.lineEdit_book.text()
@@ -754,74 +782,127 @@ class MyMainWindow(QMainWindow):
         self.textBrowser_bible.clear()
         cursor = self.textBrowser_bible.textCursor()
         cursor.insertHtml('''<p><span style="color: blue;">{} <br></span>'''.format(" "))
-        hit_books_old,hit_chapters_old = get_book_chapters(days_elapsed =self.days_elapsed, speed = self.spinBox_old.value(), offset = self.spinBox_more_old.value(), plan_type = 'old')
+        #setup for reading from beginning to end mode
+        #are you in new testimony today?
+        in_new_testimony = (self.days_elapsed*self.spinBox_old.value()+self.spinBox_more_old.value()-self.old_testimony)>=0
+        speed_all = [self.spinBox_old.value(),self.spinBox_new.value()][int(in_new_testimony)]
+        offset_all = [self.spinBox_more_old.value(),self.spinBox_more_new.value()][int(in_new_testimony)]
+        hit_books,hit_chapters = get_book_chapters(days_elapsed =self.days_elapsed, speed = speed_all, offset = offset_all, plan_type = 'all')
+        #setup for the other mode, ie reading chapters from old testimony and new testimony at the same time
         hit_books_new,hit_chapters_new = get_book_chapters(days_elapsed =self.days_elapsed, speed = self.spinBox_new.value(), offset = self.spinBox_more_new.value(), plan_type = 'new')
+        if len(hit_books_new)==0:#if we finish reading the new testimony
+            extra_offset = self.days_elapsed*self.spinBox_new.value()+self.spinBox_more_new.value() - (self.total_chapter-self.old_testimony)
+            hit_books_old,hit_chapters_old = get_book_chapters(days_elapsed =self.days_elapsed, speed = self.spinBox_old.value()+self.spinBox_new.value(), offset = self.spinBox_more_old.value()+extra_offset, plan_type = 'old')
+        else:
+            hit_books_old,hit_chapters_old = get_book_chapters(days_elapsed =self.days_elapsed, speed = self.spinBox_old.value(), offset = self.spinBox_more_old.value(), plan_type = 'old')
         old_testimony_content_cn = []
         new_testimony_content_cn = []
         old_testimony_content_eng = []
         new_testimony_content_eng = []
+        all_content_cn, all_content_eng = [], []
         if self.radioButton_cn.isChecked():
-            for i,each in enumerate(hit_books_old):
-                old_testimony_content_cn_ = self.bible_chinese_json[each][hit_chapters_old[i]]
-                old_testimony_content_cn.append('《{}》第{}章'.format(each,hit_chapters_old[i]))
-                for each_verse, each_scripture in old_testimony_content_cn_.items():
-                    old_testimony_content_cn.append('{}.{}'.format(each_verse,each_scripture.rstrip()))
-            for i,each in enumerate(hit_books_new):
-                new_testimony_content_cn_ = self.bible_chinese_json[each][hit_chapters_new[i]]
-                new_testimony_content_cn.append('《{}》第{}章'.format(each,hit_chapters_new[i]))
-                for each_verse, each_scripture in new_testimony_content_cn_.items():
-                    new_testimony_content_cn.append('{}.{}'.format(each_verse,each_scripture.rstrip()))
-            self.textBrowser_bible.setText('\n\n\n'.join(old_testimony_content_cn+new_testimony_content_cn)) 
+            if self.checkBox_order.isChecked():
+                for i,each in enumerate(hit_books):
+                    all_content_cn_ = self.bible_chinese_json[each][hit_chapters[i]]
+                    all_content_cn.append('《{}》第{}章'.format(each,hit_chapters[i]))
+                    for each_verse, each_scripture in all_content_cn_.items():
+                        all_content_cn.append('{}.{}'.format(each_verse,each_scripture.rstrip()))
+                self.textBrowser_bible.setText('\n\n\n'.join(all_content_cn)) 
+            else:
+                for i,each in enumerate(hit_books_old):
+                    old_testimony_content_cn_ = self.bible_chinese_json[each][hit_chapters_old[i]]
+                    old_testimony_content_cn.append('《{}》第{}章'.format(each,hit_chapters_old[i]))
+                    for each_verse, each_scripture in old_testimony_content_cn_.items():
+                        old_testimony_content_cn.append('{}.{}'.format(each_verse,each_scripture.rstrip()))
+                for i,each in enumerate(hit_books_new):
+                    new_testimony_content_cn_ = self.bible_chinese_json[each][hit_chapters_new[i]]
+                    new_testimony_content_cn.append('《{}》第{}章'.format(each,hit_chapters_new[i]))
+                    for each_verse, each_scripture in new_testimony_content_cn_.items():
+                        new_testimony_content_cn.append('{}.{}'.format(each_verse,each_scripture.rstrip()))
+                self.textBrowser_bible.setText('\n\n\n'.join(old_testimony_content_cn+new_testimony_content_cn)) 
         elif self.radioButton_eng.isChecked():
-            hit_books_old = [bible_book_english[bible_books.index(each)] for each in hit_books_old]
-            hit_books_new = [bible_book_english[bible_books.index(each)] for each in hit_books_new]
-            for i,each in enumerate(hit_books_old):
-                old_testimony_content_eng.append('<{}> Chapter{}'.format(each,hit_chapters_old[i]))
-                old_testimony_content_eng_ = self.bible_english_json[each][hit_chapters_old[i]]
-                for each_verse, each_scripture in old_testimony_content_eng_.items():
-                    old_testimony_content_eng.append('{}.{}'.format(each_verse,each_scripture.rstrip()))
-            for i,each in enumerate(hit_books_new):
-                new_testimony_content_eng.append('<{}> Chapter{}'.format(each,hit_chapters_new[i]))
-                new_testimony_content_eng_ = self.english_bible_json[each][hit_chapters_new[i]]
-                for each_verse, each_scripture in new_testimony_content_eng_.items():
-                    new_testimony_content_eng.append('{}.{}'.format(each_verse,each_scripture.rstrip()))
-            self.textBrowser_bible.setText('\n\n\n'.join(old_testimony_content_eng+new_testimony_content_eng)) 
+            if self.checkBox_order.isChecked():
+                hit_books = [bible_book_english[bible_books.index(each)] for each in hit_books]
+                for i,each in enumerate(hit_books):
+                    all_content_eng_ = self.bible_english_json[each][hit_chapters[i]]
+                    all_content_eng.append('<{}>Chapter{}'.format(each,hit_chapters[i]))
+                    for each_verse, each_scripture in all_content_eng_.items():
+                        all_content_eng.append('{}.{}'.format(each_verse,each_scripture.rstrip()))
+                self.textBrowser_bible.setText('\n\n\n'.join(all_content_eng)) 
+            else:
+                hit_books_old = [bible_book_english[bible_books.index(each)] for each in hit_books_old]
+                hit_books_new = [bible_book_english[bible_books.index(each)] for each in hit_books_new]
+                for i,each in enumerate(hit_books_old):
+                    old_testimony_content_eng.append('<{}> Chapter{}'.format(each,hit_chapters_old[i]))
+                    old_testimony_content_eng_ = self.bible_english_json[each][hit_chapters_old[i]]
+                    for each_verse, each_scripture in old_testimony_content_eng_.items():
+                        old_testimony_content_eng.append('{}.{}'.format(each_verse,each_scripture.rstrip()))
+                for i,each in enumerate(hit_books_new):
+                    new_testimony_content_eng.append('<{}> Chapter{}'.format(each,hit_chapters_new[i]))
+                    new_testimony_content_eng_ = self.english_bible_json[each][hit_chapters_new[i]]
+                    for each_verse, each_scripture in new_testimony_content_eng_.items():
+                        new_testimony_content_eng.append('{}.{}'.format(each_verse,each_scripture.rstrip()))
+                self.textBrowser_bible.setText('\n\n\n'.join(old_testimony_content_eng+new_testimony_content_eng)) 
         elif self.radioButton_cn_eng.isChecked():
-            #chinese bible
-            for i,each in enumerate(hit_books_old):
-                old_testimony_content_cn.append('《{}》第{}章'.format(each,hit_chapters_old[i]))
-                old_testimony_content_cn_ = self.bible_chinese_json[each][hit_chapters_old[i]]
-                for each_verse, each_scripture in old_testimony_content_cn_.items():
-                    old_testimony_content_cn.append('{}.{}'.format(each_verse,each_scripture.rstrip()))
-            for i,each in enumerate(hit_books_new):
-                new_testimony_content_cn.append('《{}》第{}章'.format(each,hit_chapters_new[i]))
-                new_testimony_content_cn_ = self.bible_chinese_json[each][hit_chapters_new[i]]
-                for each_verse, each_scripture in new_testimony_content_cn_.items():
-                    new_testimony_content_cn.append('{}.{}'.format(each_verse,each_scripture.rstrip()))
-            #english bible
-            hit_books_old = [bible_book_english[bible_books.index(each)] for each in hit_books_old]
-            hit_books_new = [bible_book_english[bible_books.index(each)] for each in hit_books_new]
-            for i,each in enumerate(hit_books_old):
-                old_testimony_content_eng.append('<{}> Chapter{}'.format(each,hit_chapters_old[i]))
-                old_testimony_content_eng_ = self.bible_english_json[each][hit_chapters_old[i]]
-                for each_verse, each_scripture in old_testimony_content_eng_.items():
-                    old_testimony_content_eng.append('{}.{}'.format(each_verse,each_scripture.rstrip()))
-            for i,each in enumerate(hit_books_new):
-                new_testimony_content_eng.append('<{}> Chapter{}'.format(each,hit_chapters_new[i]))
-                new_testimony_content_eng_ = self.bible_english_json[each][hit_chapters_new[i]]
-                for each_verse, each_scripture in new_testimony_content_eng_.items():
-                    new_testimony_content_eng.append('{}.{}'.format(each_verse,each_scripture.rstrip()))
-            cn_content = old_testimony_content_cn+new_testimony_content_cn
-            eng_content = old_testimony_content_eng+new_testimony_content_eng
-            try:
-                zip_content = zip(cn_content,eng_content)
-                display_content = []
-                for each_item in zip_content:
-                    display_content.append(each_item[0]+'\n')
-                    display_content.append(each_item[1]+'\n\n')
-                self.textBrowser_bible.setText(''.join(display_content)) 
-            except:
-                self.textBrowser_bible.setText('\n\n'.join(cn_content+eng_content)) 
+            if self.checkBox_order.isChecked():
+                #chinese bible
+                for i,each in enumerate(hit_books):
+                    all_content_cn_ = self.bible_chinese_json[each][hit_chapters[i]]
+                    all_content_cn.append('《{}》第{}章'.format(each,hit_chapters[i]))
+                    for each_verse, each_scripture in all_content_cn_.items():
+                        all_content_cn.append('{}.{}'.format(each_verse,each_scripture.rstrip()))
+                #english bible
+                hit_books = [bible_book_english[bible_books.index(each)] for each in hit_books]
+                for i,each in enumerate(hit_books):
+                    all_content_eng_ = self.bible_english_json[each][hit_chapters[i]]
+                    all_content_eng.append('<{}>Chapter{}'.format(each,hit_chapters[i]))
+                    for each_verse, each_scripture in all_content_eng_.items():
+                        all_content_eng.append('{}.{}'.format(each_verse,each_scripture.rstrip()))
+                try:
+                    zip_content = zip(all_content_cn,all_content_eng)
+                    display_content = []
+                    for each_item in zip_content:
+                        display_content.append(each_item[0]+'\n')
+                        display_content.append(each_item[1]+'\n\n')
+                    self.textBrowser_bible.setText(''.join(display_content)) 
+                except:
+                    self.textBrowser_bible.setText('\n\n'.join(all_content_cn+all_content_eng)) 
+            else:
+                #chinese bible
+                for i,each in enumerate(hit_books_old):
+                    old_testimony_content_cn.append('《{}》第{}章'.format(each,hit_chapters_old[i]))
+                    old_testimony_content_cn_ = self.bible_chinese_json[each][hit_chapters_old[i]]
+                    for each_verse, each_scripture in old_testimony_content_cn_.items():
+                        old_testimony_content_cn.append('{}.{}'.format(each_verse,each_scripture.rstrip()))
+                for i,each in enumerate(hit_books_new):
+                    new_testimony_content_cn.append('《{}》第{}章'.format(each,hit_chapters_new[i]))
+                    new_testimony_content_cn_ = self.bible_chinese_json[each][hit_chapters_new[i]]
+                    for each_verse, each_scripture in new_testimony_content_cn_.items():
+                        new_testimony_content_cn.append('{}.{}'.format(each_verse,each_scripture.rstrip()))
+                #english bible
+                hit_books_old = [bible_book_english[bible_books.index(each)] for each in hit_books_old]
+                hit_books_new = [bible_book_english[bible_books.index(each)] for each in hit_books_new]
+                for i,each in enumerate(hit_books_old):
+                    old_testimony_content_eng.append('<{}> Chapter{}'.format(each,hit_chapters_old[i]))
+                    old_testimony_content_eng_ = self.bible_english_json[each][hit_chapters_old[i]]
+                    for each_verse, each_scripture in old_testimony_content_eng_.items():
+                        old_testimony_content_eng.append('{}.{}'.format(each_verse,each_scripture.rstrip()))
+                for i,each in enumerate(hit_books_new):
+                    new_testimony_content_eng.append('<{}> Chapter{}'.format(each,hit_chapters_new[i]))
+                    new_testimony_content_eng_ = self.bible_english_json[each][hit_chapters_new[i]]
+                    for each_verse, each_scripture in new_testimony_content_eng_.items():
+                        new_testimony_content_eng.append('{}.{}'.format(each_verse,each_scripture.rstrip()))
+                cn_content = old_testimony_content_cn+new_testimony_content_cn
+                eng_content = old_testimony_content_eng+new_testimony_content_eng
+                try:
+                    zip_content = zip(cn_content,eng_content)
+                    display_content = []
+                    for each_item in zip_content:
+                        display_content.append(each_item[0]+'\n')
+                        display_content.append(each_item[1]+'\n\n')
+                    self.textBrowser_bible.setText(''.join(display_content)) 
+                except:
+                    self.textBrowser_bible.setText('\n\n'.join(cn_content+eng_content)) 
 
     def get_scripture_for_today(self):
         books = []
@@ -942,7 +1023,8 @@ class MyMainWindow(QMainWindow):
             cursor.insertHtml('''<p><span style="color: green;">{} <br></span>'''.format(each))
         # self.textBrowser.setText('\n'.join(content))
 
-    def update_reading_plan(self):
+    #not in use any more
+    def update_reading_plan_old(self):
         plan = self.comboBox_plan.currentText()
         if plan == "一天四章（新旧各两章）":
             self.reading_plan = '4-2-2'

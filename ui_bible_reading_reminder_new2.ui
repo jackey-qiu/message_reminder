@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1440</width>
-    <height>829</height>
+    <height>804</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -45,21 +45,21 @@
           <item>
            <widget class="QPushButton" name="pushButton_today">
             <property name="text">
-             <string>提取今日经文</string>
+             <string>今日经文</string>
             </property>
            </widget>
           </item>
           <item>
            <widget class="QPushButton" name="pushButton_before">
             <property name="text">
-             <string>提取往日经文</string>
+             <string>往日经文</string>
             </property>
            </widget>
           </item>
           <item>
            <widget class="QPushButton" name="pushButton_specified">
             <property name="text">
-             <string>提取指定经文</string>
+             <string>指定经文</string>
             </property>
            </widget>
           </item>
@@ -67,6 +67,13 @@
            <widget class="QPushButton" name="pushButton_check">
             <property name="text">
              <string>今日打卡</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="pushButton_save_plan">
+            <property name="text">
+             <string>保存计划</string>
             </property>
            </widget>
           </item>
@@ -250,6 +257,13 @@
             </property>
             <property name="text">
              <string>读经计划</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="checkBox_order">
+            <property name="text">
+             <string>顺序读经</string>
             </property>
            </widget>
           </item>
