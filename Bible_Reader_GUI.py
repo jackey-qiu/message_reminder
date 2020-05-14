@@ -171,6 +171,59 @@ bible_books = \
  '犹大书',
  '启示录']
 
+def get_book_chapters(days_elapsed =2, speed = 2, offset = 0, plan_type = 'all', bible_books = bible_books):
+    if plan_type == 'all':
+        bible_books_ = bible_books
+    elif plan_type == 'new':
+        bible_books_ = bible_books[39:]
+    elif plan_type == 'old':
+        bible_books_ = bible_books[0:39]
+    bible_chinese_json = {}
+    with open(os.path.join(msg_path,'chinese_bible.json'),'r') as f:
+        bible_chinese_json =  json.load(f)
+    hit_book, hit_chapter = [], []
+    total_chapter_read = days_elapsed * speed + offset
+    if plan_type in ['all','new','old']:
+        chapters_accum = 0
+        for each in bible_books_:
+            current_book_chapters = len(bible_chinese_json[each])
+            if chapters_accum+current_book_chapters<=total_chapter_read:
+                chapters_accum = chapters_accum + current_book_chapters
+            else:
+                hit_book.append(each)
+                hit_chapter.append(total_chapter_read-chapters_accum+1)
+                break
+        chapters_accum = 0
+        for each in bible_books_:
+            current_book_chapters = len(bible_chinese_json[each])
+            if chapters_accum+current_book_chapters<=(total_chapter_read+speed-1):
+                chapters_accum = chapters_accum + current_book_chapters
+            else:
+                hit_book.append(each)
+                hit_chapter.append(total_chapter_read+speed-1-chapters_accum+1)
+                break
+        print(hit_book,hit_chapter)
+        if len(hit_book)==0:
+            return hit_book,hit_chapter
+        if len(hit_book)==1:
+            return hit_book*2,list(range(int(hit_chapter[0]),len(bible_chinese_json[hit_book[0]])+1))
+        if hit_book[0]==hit_book[1]:
+            hit_chapter=list(range(hit_chapter[0],hit_chapter[1]+1))
+            hit_book = [hit_book[0]]*speed
+        else:
+            num_books_in_between = bible_books_.index(hit_book[1]) - bible_books_.index(hit_book[0])
+            books_in_between = bible_books_[(bible_books_.index(hit_book[0])+1):(bible_books_.index(hit_book[0])+num_books_in_between)]
+            books_in_between_all =[]
+            chapters_in_between_all = []
+            for each in books_in_between:
+                # books_in_between_all=books_in_between_all+[each]*len(bible_books[each])
+                books_in_between_all=books_in_between_all+[each]*len(bible_chinese_json[each])
+                chapters_in_between_all=chapters_in_between_all+list(range(1,len(bible_chinese_json[each])+1))
+            hit_book = [hit_book[0]]*(len(bible_chinese_json[hit_book[0]])-hit_chapter[0]+1)+books_in_between_all+[hit_book[1]]*hit_chapter[1]
+            hit_chapter = list(range(hit_chapter[0],len(bible_chinese_json[hit_book[0]])+1))+chapters_in_between_all+list(range(1,hit_chapter[1]+1))
+        return hit_book,[str(each) for each in hit_chapter]
+
+
 def search_bible(file = 'chinese_bible.json',phrase = ''):
     hit_book, hit_verse, hit_chapter = [],[],[]
     if phrase == '':
@@ -373,7 +426,7 @@ class MyMainWindow(QMainWindow):
     def __init__(self, parent = None):
         super(MyMainWindow, self).__init__(parent)
         #pg.mkQApp()
-        uic.loadUi(os.path.join(msg_path,'ui_bible_reading_reminder_new.ui'),self)
+        uic.loadUi(os.path.join(msg_path,'ui_bible_reading_reminder_new2.ui'),self)
         self.plainTextEdit.setStyleSheet(
                         """QPlainTextEdit {background-color: #FFFFFF;
                            color: #3300CC;}""")
@@ -412,7 +465,7 @@ class MyMainWindow(QMainWindow):
         self.first_day_in_plan = None 
         self.comboBox_book.clear()
         self.comboBox_book.addItems(bible_books)
-        self.update_reading_plan()
+        # self.update_reading_plan()
         self.update_count_down_time()
         self.get_spring_desert_article()
         self.load_extra_chapter_number()
@@ -420,13 +473,16 @@ class MyMainWindow(QMainWindow):
 
         #signal-slot-pair connection
         self.calendarWidget.selectionChanged.connect(self.get_spring_desert_article)
-        self.pushButton_today.clicked.connect(self.update_count_down_time)
-        self.pushButton_today.clicked.connect(self.get_scripture_for_today)
+        self.pushButton_today.clicked.connect(self.update_count_down_time_today)
+        #self.pushButton_today.clicked.connect(self.get_scripture_for_today)
+        self.pushButton_today.clicked.connect(self.get_scripture_for_today_local_disk)
         self.pushButton_specified.clicked.connect(self.get_scripture_specified)
         self.pushButton_load.clicked.connect(self.load_all_notes)
         self.pushButton_save.clicked.connect(self.save_notes)
-        self.pushButton_before.clicked.connect(self.update_count_down_time_2)
-        self.pushButton_before.clicked.connect(self.get_scripture_for_today)
+        # self.pushButton_before.clicked.connect(self.update_count_down_time_2))
+        self.pushButton_before.clicked.connect(self.update_count_down_time)
+        # self.pushButton_before.clicked.connect(self.get_scripture_for_today)
+        self.pushButton_before.clicked.connect(self.get_scripture_for_today_local_disk)
         self.pushButton_check.clicked.connect(self.update_check_read)
         self.pushButton_change.clicked.connect(self.get_golden_scripture)
         self.pushButton_save_current.clicked.connect(self.save_scripture)
@@ -437,7 +493,7 @@ class MyMainWindow(QMainWindow):
         self.spinBox_more_new.valueChanged.connect(self.update_extra_chapter_number)
         self.spinBox_more_old.valueChanged.connect(self.update_extra_chapter_number)
         self.comboBox_book.currentIndexChanged.connect(self.set_bible_book)
-        self.comboBox_plan.currentIndexChanged.connect(self.update_reading_plan)
+        # self.comboBox_plan.currentIndexChanged.connect(self.update_reading_plan)
         self.comboBox_bible_version.currentIndexChanged.connect(self.update_bible_version)
         self.pushButton_show_notes.clicked.connect(self.show_note_panel)
         self.pushButton_hide_notes.clicked.connect(self.hide_note_panel)
@@ -558,16 +614,16 @@ class MyMainWindow(QMainWindow):
         with open(os.path.join(msg_path,'read_or_not.txt'),'r') as f:
             date = f.readlines()[0]
             if date.rstrip()=='{}.{}.{}'.format(d,m,y):
-                self.label_check.setText('今日经文已读')
+                self.label_check.setText('今日已读')
             else:
-                self.label_check.setText('今日经文未读')
+                self.label_check.setText('今日未读')
 
     def update_check_read(self):
         today = datetime.date.today()
         y,m,d = today.year, today.month, today.day
         with open(os.path.join(msg_path,'read_or_not.txt'),'w') as f:
             f.write('{}.{}.{}'.format(d,m,y))
-            self.label_check.setText('今日经文已读')
+            self.label_check.setText('今日已读')
 
 
     def load_extra_chapter_number(self):
@@ -656,7 +712,7 @@ class MyMainWindow(QMainWindow):
         cursor.insertHtml('''<p><span style="color: blue;">{} <br></span>'''.format(" "))
         self.textBrowser_bible.setText('\n'.join(chapter_content_all)) 
         
-    def _get_book_chapters(self,days_elapsed =0, speed = 2, offset = 0, plan_type = 'all'):
+    def get_book_chapters(self,days_elapsed =0, speed = 2, offset = 0, plan_type = 'all'):
         hit_book, hit_chapter = [], []
         total_chapter_read = days_elapsed * speed + offset
         if plan_type == 'all':
@@ -683,21 +739,89 @@ class MyMainWindow(QMainWindow):
                 hit_book = [hit_book[0]]*speed
             else:
                 num_books_in_between = bible_books.index(hit_book[1]) - bible_books.index(hit_book[0])
-                books_in_between = bible_books[(bible_books.index(hit_book[0])+1):(bible_books.index(hit_book[1])+num_books_in_between+1)]
+                books_in_between = bible_books[(bible_books.index(hit_book[0])+1):(bible_books.index(hit_book[0])+num_books_in_between)]
                 books_in_between_all =[]
                 chapters_in_between_all = []
                 for each in books_in_between:
-                    books_in_between_all=books_in_between_all+[each]*len(bible_books[each])
-                    chapters_in_between_all=chapters_in_between_all+list(range(1,len(bible_books[each])+1))
-                hit_book = [hit_book[0]]*(len(bible_books[hit_book[0]])-hit_chapter[0]+1)+[books_in_between_all]+[hit_book[1]]*hit_chapter[1]
-                hit_chapter = list(range(hit_chapter[0],len(bible_books[hit_book[0]]+1)))+chapters_in_between_all+list(range(1,hit_chapter[1]+1))
+                    # books_in_between_all=books_in_between_all+[each]*len(bible_books[each])
+                    books_in_between_all=books_in_between_all+[each]*len(self.bible_chinese_json[each])
+                    chapters_in_between_all=chapters_in_between_all+list(range(1,len(self.bible_chinese_json[each])+1))
+                hit_book = [hit_book[0]]*(len(self.bible_chinese_json[hit_book[0]])-hit_chapter[0]+1)+[books_in_between_all]+[hit_book[1]]*hit_chapter[1]
+                hit_chapter = list(range(hit_chapter[0],len(self.bible_chinese_json[hit_book[0]])+1))+chapters_in_between_all+list(range(1,hit_chapter[1]+1))
             return hit_book,hit_chapter
             
-            
-
     def get_scripture_for_today_local_disk(self):
-        pass
-
+        self.textBrowser_bible.clear()
+        cursor = self.textBrowser_bible.textCursor()
+        cursor.insertHtml('''<p><span style="color: blue;">{} <br></span>'''.format(" "))
+        hit_books_old,hit_chapters_old = get_book_chapters(days_elapsed =self.days_elapsed, speed = self.spinBox_old.value(), offset = self.spinBox_more_old.value(), plan_type = 'old')
+        hit_books_new,hit_chapters_new = get_book_chapters(days_elapsed =self.days_elapsed, speed = self.spinBox_new.value(), offset = self.spinBox_more_new.value(), plan_type = 'new')
+        old_testimony_content_cn = []
+        new_testimony_content_cn = []
+        old_testimony_content_eng = []
+        new_testimony_content_eng = []
+        if self.radioButton_cn.isChecked():
+            for i,each in enumerate(hit_books_old):
+                old_testimony_content_cn_ = self.bible_chinese_json[each][hit_chapters_old[i]]
+                old_testimony_content_cn.append('《{}》第{}章'.format(each,hit_chapters_old[i]))
+                for each_verse, each_scripture in old_testimony_content_cn_.items():
+                    old_testimony_content_cn.append('{}.{}'.format(each_verse,each_scripture.rstrip()))
+            for i,each in enumerate(hit_books_new):
+                new_testimony_content_cn_ = self.bible_chinese_json[each][hit_chapters_new[i]]
+                new_testimony_content_cn.append('《{}》第{}章'.format(each,hit_chapters_new[i]))
+                for each_verse, each_scripture in new_testimony_content_cn_.items():
+                    new_testimony_content_cn.append('{}.{}'.format(each_verse,each_scripture.rstrip()))
+            self.textBrowser_bible.setText('\n\n\n'.join(old_testimony_content_cn+new_testimony_content_cn)) 
+        elif self.radioButton_eng.isChecked():
+            hit_books_old = [bible_book_english[bible_books.index(each)] for each in hit_books_old]
+            hit_books_new = [bible_book_english[bible_books.index(each)] for each in hit_books_new]
+            for i,each in enumerate(hit_books_old):
+                old_testimony_content_eng.append('<{}> Chapter{}'.format(each,hit_chapters_old[i]))
+                old_testimony_content_eng_ = self.bible_english_json[each][hit_chapters_old[i]]
+                for each_verse, each_scripture in old_testimony_content_eng_.items():
+                    old_testimony_content_eng.append('{}.{}'.format(each_verse,each_scripture.rstrip()))
+            for i,each in enumerate(hit_books_new):
+                new_testimony_content_eng.append('<{}> Chapter{}'.format(each,hit_chapters_new[i]))
+                new_testimony_content_eng_ = self.english_bible_json[each][hit_chapters_new[i]]
+                for each_verse, each_scripture in new_testimony_content_eng_.items():
+                    new_testimony_content_eng.append('{}.{}'.format(each_verse,each_scripture.rstrip()))
+            self.textBrowser_bible.setText('\n\n\n'.join(old_testimony_content_eng+new_testimony_content_eng)) 
+        elif self.radioButton_cn_eng.isChecked():
+            #chinese bible
+            for i,each in enumerate(hit_books_old):
+                old_testimony_content_cn.append('《{}》第{}章'.format(each,hit_chapters_old[i]))
+                old_testimony_content_cn_ = self.bible_chinese_json[each][hit_chapters_old[i]]
+                for each_verse, each_scripture in old_testimony_content_cn_.items():
+                    old_testimony_content_cn.append('{}.{}'.format(each_verse,each_scripture.rstrip()))
+            for i,each in enumerate(hit_books_new):
+                new_testimony_content_cn.append('《{}》第{}章'.format(each,hit_chapters_new[i]))
+                new_testimony_content_cn_ = self.bible_chinese_json[each][hit_chapters_new[i]]
+                for each_verse, each_scripture in new_testimony_content_cn_.items():
+                    new_testimony_content_cn.append('{}.{}'.format(each_verse,each_scripture.rstrip()))
+            #english bible
+            hit_books_old = [bible_book_english[bible_books.index(each)] for each in hit_books_old]
+            hit_books_new = [bible_book_english[bible_books.index(each)] for each in hit_books_new]
+            for i,each in enumerate(hit_books_old):
+                old_testimony_content_eng.append('<{}> Chapter{}'.format(each,hit_chapters_old[i]))
+                old_testimony_content_eng_ = self.bible_english_json[each][hit_chapters_old[i]]
+                for each_verse, each_scripture in old_testimony_content_eng_.items():
+                    old_testimony_content_eng.append('{}.{}'.format(each_verse,each_scripture.rstrip()))
+            for i,each in enumerate(hit_books_new):
+                new_testimony_content_eng.append('<{}> Chapter{}'.format(each,hit_chapters_new[i]))
+                new_testimony_content_eng_ = self.bible_english_json[each][hit_chapters_new[i]]
+                for each_verse, each_scripture in new_testimony_content_eng_.items():
+                    new_testimony_content_eng.append('{}.{}'.format(each_verse,each_scripture.rstrip()))
+            cn_content = old_testimony_content_cn+new_testimony_content_cn
+            eng_content = old_testimony_content_eng+new_testimony_content_eng
+            try:
+                zip_content = zip(cn_content,eng_content)
+                display_content = []
+                for each_item in zip_content:
+                    display_content.append(each_item[0]+'\n')
+                    display_content.append(each_item[1]+'\n\n')
+                self.textBrowser_bible.setText(''.join(display_content)) 
+            except:
+                self.textBrowser_bible.setText('\n\n'.join(cn_content+eng_content)) 
 
     def get_scripture_for_today(self):
         books = []
@@ -728,6 +852,7 @@ class MyMainWindow(QMainWindow):
         cursor.insertHtml('''<p><span style="color: blue;">{} <br></span>'''.format(" "))
         self.textBrowser_bible.setText('\n\n'.join(chapter_content)) 
 
+    #get chapter by crawling from website, not used anymore
     def craw_bible_chapters(self,scope = 'all',speed=2, more = 0):
         offset = 0
         append_chapters = 0
@@ -828,16 +953,22 @@ class MyMainWindow(QMainWindow):
         self.update_count_down_time()
 
     def update_count_down_time(self):
-        print("something happend")
         start_month = int(self.spinBox_start_month.value())
         start_date = int(self.spinBox_start_date.value())
         start_year = int(datetime.date.today().year)
         start = datetime.date(start_year, start_month, start_date)
-        count_down =  int(self.total_chapter/self.speed)+[1,0][int((self.total_chapter%self.speed)==0)] - (datetime.date.today()-start).days
-        print(count_down,self.speed)
+        self.days_elapsed=(self.calendarWidget.selectedDate().toPyDate()-start).days
+        # count_down =  int(self.total_chapter/self.speed)+[1,0][int((self.total_chapter%self.speed)==0)] - (datetime.date.today()-start).days
+
+    def update_count_down_time_today(self):
+        start_month = int(self.spinBox_start_month.value())
+        start_date = int(self.spinBox_start_date.value())
+        start_year = int(datetime.date.today().year)
+        start = datetime.date(start_year, start_month, start_date)
+        self.days_elapsed  = (datetime.date.today()-start).days
+        count_down =  int(self.total_chapter/(int(self.spinBox_old.value())+int(self.spinBox_new.value()))) - (datetime.date.today()-start).days
         self.lineEdit_count_down.setText(str(count_down))
-        total_days = self.total_chapter/self.speed
-        print(1-count_down/total_days, self.total_chapter)
+        total_days = self.total_chapter/(int(self.spinBox_old.value())+int(self.spinBox_new.value()))
         self.progressBar.setValue(100*(1-count_down/total_days))
 
     def update_count_down_time_2(self):
