@@ -428,8 +428,9 @@ class MyMainWindow(QMainWindow):
         #self.pushButton_today.clicked.connect(self.get_scripture_for_today)
         self.pushButton_today.clicked.connect(self.get_scripture_for_today_local_disk)
         self.pushButton_specified.clicked.connect(self.get_scripture_specified)
-        self.pushButton_load.clicked.connect(self.load_all_notes)
-        self.pushButton_save.clicked.connect(self.save_notes)
+        self.pushButton_load.clicked.connect(self.load_all_notes_json)
+        self.pushButton_save.clicked.connect(self.save_notes_json_overwrite)
+        self.pushButton_append.clicked.connect(self.save_notes_json_append)
         # self.pushButton_before.clicked.connect(self.update_count_down_time_2))
         self.pushButton_before.clicked.connect(self.update_count_down_time)
         # self.pushButton_before.clicked.connect(self.get_scripture_for_today)
@@ -1052,7 +1053,10 @@ class MyMainWindow(QMainWindow):
         start_date = int(self.spinBox_start_date.value())
         start_year = int(datetime.date.today().year)
         start = datetime.date(start_year, start_month, start_date)
-        self.days_elapsed=(self.calendarWidget.selectedDate().toPyDate()-start).days
+        date_before = self.calendarWidget.selectedDate().toPyDate()
+        self.days_elapsed=(date_before-start).days
+        self.load_specified_notes_json(date_before.year,date_before.month,date_before.day)
+
         # count_down =  int(self.total_chapter/self.speed)+[1,0][int((self.total_chapter%self.speed)==0)] - (datetime.date.today()-start).days
 
     def update_count_down_time_today(self):
@@ -1095,6 +1099,80 @@ class MyMainWindow(QMainWindow):
             
             self.statusbar.clearMessage()
             self.statusbar.showMessage("读经笔记保存成功！")
+        else:
+            pass
+
+    def save_notes_json_overwrite(self):
+        notes_path = os.path.join(msg_path,'Bible_reader_notes.json')
+        y,m,d = datetime.date.today().year, datetime.date.today().month, datetime.date.today().day
+        notes_dict = {}
+        if self.plainTextEdit.toPlainText()!='':
+            if not os.path.exists(notes_path):
+                notes_dict = {}
+                with open(notes_path,'w') as f:
+                    notes_dict["{}月{}月{}日".format(y,m,d)] = self.plainTextEdit.toPlainText()
+                    json.dump(notes_dict,f)
+            else:
+                with open(notes_path,'r') as f:
+                    notes_dict = json.load(f)
+                key_today = "{}月{}月{}日".format(y,m,d)
+                notes_dict[key_today] = self.plainTextEdit.toPlainText()
+                with open(notes_path,'w') as f:
+                    json.dump(notes_dict,f)
+            self.statusbar.clearMessage()
+            self.statusbar.showMessage("读经笔记覆盖保存成功！")
+        else:
+            pass
+
+    def save_notes_json_append(self):
+        notes_path = os.path.join(msg_path,'Bible_reader_notes.json')
+        y,m,d = datetime.date.today().year, datetime.date.today().month, datetime.date.today().day
+        notes_dict = {}
+        if self.plainTextEdit.toPlainText()!='':
+            if not os.path.exists(notes_path):
+                notes_dict = {}
+                with open(notes_path,'w') as f:
+                    notes_dict["{}月{}月{}日".format(y,m,d)] = self.plainTextEdit.toPlainText()
+                    json.dump(notes_dict,f)
+            else:
+                with open(notes_path,'r') as f:
+                    notes_dict = json.load(f)
+                key_today = "{}月{}月{}日".format(y,m,d)
+                if key_today in notes_dict:
+                    notes_dict[key_today] = notes_dict[key_today]+'\n\n'+self.plainTextEdit.toPlainText()
+                else:
+                    notes_dict[key_today] = self.plainTextEdit.toPlainText()
+                with open(notes_path,'w') as f:
+                    json.dump(notes_dict,f)
+            self.statusbar.clearMessage()
+            self.statusbar.showMessage("读经笔记追加保存成功！")
+        else:
+            pass
+
+    def load_all_notes_json(self):
+        notes_path = os.path.join(msg_path,'Bible_reader_notes.json')
+        # self.save_notes()
+        if os.path.exists(notes_path):
+            with open(notes_path,'r') as f:
+                notes_all = json.load(f)
+                content_together = []
+                for each in notes_all:
+                    content_together.append('{}\n{}\n\n\n'.format(each,notes_all[each]))
+                self.plainTextEdit.setPlainText("".join(content_together))
+        else:
+            pass
+
+    def load_specified_notes_json(self,y,m,d):
+        notes_path = os.path.join(msg_path,'Bible_reader_notes.json')
+        # self.save_notes()
+        if os.path.exists(notes_path):
+            with open(notes_path,'r') as f:
+                notes_all = json.load(f)
+                if "{}月{}月{}日".format(y,m,d) in notes_all:
+                    content_together = [notes_all["{}月{}月{}日".format(y,m,d)]]
+                    self.plainTextEdit.setPlainText("".join(content_together))
+                else:
+                    pass
         else:
             pass
 

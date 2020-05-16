@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1440</width>
-    <height>804</height>
+    <height>830</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -746,7 +746,14 @@ p, li { white-space: pre-wrap; }
           <item>
            <widget class="QPushButton" name="pushButton_save">
             <property name="text">
-             <string>保存当天笔记</string>
+             <string>覆盖当天笔记</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="pushButton_append">
+            <property name="text">
+             <string>追加当天笔记</string>
             </property>
            </widget>
           </item>
