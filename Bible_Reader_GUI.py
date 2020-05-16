@@ -171,57 +171,6 @@ bible_books = \
  '犹大书',
  '启示录']
 
-def get_book_chapters(days_elapsed =2, speed = 2, offset = 0, plan_type = 'all', bible_books = bible_books):
-    if plan_type == 'all':
-        bible_books_ = bible_books
-    elif plan_type == 'new':
-        bible_books_ = bible_books[39:]
-    elif plan_type == 'old':
-        bible_books_ = bible_books[0:39]
-    bible_chinese_json = {}
-    with open(os.path.join(msg_path,'chinese_bible.json'),'r') as f:
-        bible_chinese_json =  json.load(f)
-    hit_book, hit_chapter = [], []
-    total_chapter_read = days_elapsed * speed + offset
-    if plan_type in ['all','new','old']:
-        chapters_accum = 0
-        for each in bible_books_:
-            current_book_chapters = len(bible_chinese_json[each])
-            if chapters_accum+current_book_chapters<=total_chapter_read:
-                chapters_accum = chapters_accum + current_book_chapters
-            else:
-                hit_book.append(each)
-                hit_chapter.append(total_chapter_read-chapters_accum+1)
-                break
-        chapters_accum = 0
-        for each in bible_books_:
-            current_book_chapters = len(bible_chinese_json[each])
-            if chapters_accum+current_book_chapters<=(total_chapter_read+speed-1):
-                chapters_accum = chapters_accum + current_book_chapters
-            else:
-                hit_book.append(each)
-                hit_chapter.append(total_chapter_read+speed-1-chapters_accum+1)
-                break
-        print(hit_book,hit_chapter)
-        if len(hit_book)==0:
-            return hit_book,hit_chapter
-        if len(hit_book)==1:
-            return hit_book*2,list(range(int(hit_chapter[0]),len(bible_chinese_json[hit_book[0]])+1))
-        if hit_book[0]==hit_book[1]:
-            hit_chapter=list(range(hit_chapter[0],hit_chapter[1]+1))
-            hit_book = [hit_book[0]]*speed
-        else:
-            num_books_in_between = bible_books_.index(hit_book[1]) - bible_books_.index(hit_book[0])
-            books_in_between = bible_books_[(bible_books_.index(hit_book[0])+1):(bible_books_.index(hit_book[0])+num_books_in_between)]
-            books_in_between_all =[]
-            chapters_in_between_all = []
-            for each in books_in_between:
-                # books_in_between_all=books_in_between_all+[each]*len(bible_books[each])
-                books_in_between_all=books_in_between_all+[each]*len(bible_chinese_json[each])
-                chapters_in_between_all=chapters_in_between_all+list(range(1,len(bible_chinese_json[each])+1))
-            hit_book = [hit_book[0]]*(len(bible_chinese_json[hit_book[0]])-hit_chapter[0]+1)+books_in_between_all+[hit_book[1]]*hit_chapter[1]
-            hit_chapter = list(range(hit_chapter[0],len(bible_chinese_json[hit_book[0]])+1))+chapters_in_between_all+list(range(1,hit_chapter[1]+1))
-        return hit_book,[str(each) for each in hit_chapter]
 
 
 def search_bible(file = 'chinese_bible.json',phrase = ''):
@@ -740,44 +689,88 @@ class MyMainWindow(QMainWindow):
         cursor.insertHtml('''<p><span style="color: blue;">{} <br></span>'''.format(" "))
         self.textBrowser_bible.setText('\n'.join(chapter_content_all)) 
         
-    def get_book_chapters(self,days_elapsed =0, speed = 2, offset = 0, plan_type = 'all'):
+
+    def get_book_chapters(self,days_elapsed =2, speed = 2, offset = 0, plan_type = 'all', bible_books = bible_books):
+        if plan_type == 'all':
+            bible_books_ = bible_books
+        elif plan_type == 'new':
+            bible_books_ = bible_books[39:]
+        elif plan_type == 'old':
+            bible_books_ = bible_books[0:39]
+        bible_chinese_json = self.bible_chinese_json
         hit_book, hit_chapter = [], []
         total_chapter_read = days_elapsed * speed + offset
-        if plan_type == 'all':
+
+        if plan_type in ['all','new','old']:
             chapters_accum = 0
-            for each in bible_books:
-                current_book_chapters = len(self.bible_chinese_json[each])
+            for each in bible_books_:
+                current_book_chapters = len(bible_chinese_json[each])
                 if chapters_accum+current_book_chapters<=total_chapter_read:
                     chapters_accum = chapters_accum + current_book_chapters
                 else:
                     hit_book.append(each)
                     hit_chapter.append(total_chapter_read-chapters_accum+1)
                     break
+
+            if plan_type=='old':
+                if offset!=self.spinBox_more_old.value():
+                    speed = speed + self.spinBox_new.value()
             chapters_accum = 0
-            for each in bible_books:
-                current_book_chapters = len(self.bible_chinese_json[each])
+            for each in bible_books_:
+                current_book_chapters = len(bible_chinese_json[each])
                 if chapters_accum+current_book_chapters<=(total_chapter_read+speed-1):
                     chapters_accum = chapters_accum + current_book_chapters
                 else:
                     hit_book.append(each)
                     hit_chapter.append(total_chapter_read+speed-1-chapters_accum+1)
                     break
-            if hit_book[0]==hit_book[1]:
-                hit_chapter=list(range(hit_chapter[0],hit_chapter[1]+1))
-                hit_book = [hit_book[0]]*speed
+            print(hit_book,hit_chapter)
+            if len(hit_book)==0:
+                return [],[]
+            elif len(hit_book)==1:
+                # return hit_book,list(range(int(hit_chapter[0]),len(bible_chinese_json[hit_book[0]])+1))
+                return hit_book,[str(hit_chapter[0])]
             else:
-                num_books_in_between = bible_books.index(hit_book[1]) - bible_books.index(hit_book[0])
-                books_in_between = bible_books[(bible_books.index(hit_book[0])+1):(bible_books.index(hit_book[0])+num_books_in_between)]
-                books_in_between_all =[]
-                chapters_in_between_all = []
-                for each in books_in_between:
-                    # books_in_between_all=books_in_between_all+[each]*len(bible_books[each])
-                    books_in_between_all=books_in_between_all+[each]*len(self.bible_chinese_json[each])
-                    chapters_in_between_all=chapters_in_between_all+list(range(1,len(self.bible_chinese_json[each])+1))
-                hit_book = [hit_book[0]]*(len(self.bible_chinese_json[hit_book[0]])-hit_chapter[0]+1)+[books_in_between_all]+[hit_book[1]]*hit_chapter[1]
-                hit_chapter = list(range(hit_chapter[0],len(self.bible_chinese_json[hit_book[0]])+1))+chapters_in_between_all+list(range(1,hit_chapter[1]+1))
-            return hit_book,hit_chapter
+                if hit_book[0]==hit_book[1]:
+                    hit_chapter=list(range(hit_chapter[0],hit_chapter[1]+1))
+                    hit_book = [hit_book[0]]*speed
+                else:
+                    num_books_in_between = bible_books_.index(hit_book[1]) - bible_books_.index(hit_book[0])
+                    books_in_between = bible_books_[(bible_books_.index(hit_book[0])+1):(bible_books_.index(hit_book[0])+num_books_in_between)]
+                    books_in_between_all =[]
+                    chapters_in_between_all = []
+                    for each in books_in_between:
+                        # books_in_between_all=books_in_between_all+[each]*len(bible_books[each])
+                        books_in_between_all=books_in_between_all+[each]*len(bible_chinese_json[each])
+                        chapters_in_between_all=chapters_in_between_all+list(range(1,len(bible_chinese_json[each])+1))
+                    hit_book = [hit_book[0]]*(len(bible_chinese_json[hit_book[0]])-hit_chapter[0]+1)+books_in_between_all+[hit_book[1]]*hit_chapter[1]
+                    hit_chapter = list(range(hit_chapter[0],len(bible_chinese_json[hit_book[0]])+1))+chapters_in_between_all+list(range(1,hit_chapter[1]+1))
+                return hit_book,[str(each) for each in hit_chapter]
+
             
+    def get_num_chapters_left(self, book, chapter,scope = 'all', bible_books = bible_books):
+        num_chapters_left = 0
+        if scope=='all':
+            next_book_index = bible_books.index(book)+1
+            for i in range(next_book_index,len(bible_books)):
+                num_chapters_left = num_chapters_left + len(self.bible_chinese_json[bible_books[i]])
+            num_chapters_left = num_chapters_left + len(self.bible_chinese_json[book]) - int(chapter)
+            return num_chapters_left
+        elif scope =='new':
+            bible_books =bible_books[39:] 
+            next_book_index = bible_books.index(book)+1
+            for i in range(next_book_index,len(bible_books)):
+                num_chapters_left = num_chapters_left + len(self.bible_chinese_json[bible_books[i]])
+            num_chapters_left = num_chapters_left + len(self.bible_chinese_json[book]) - int(chapter)
+            return num_chapters_left
+        elif scope =='old':
+            bible_books =bible_books[0:39] 
+            next_book_index = bible_books.index(book)+1
+            for i in range(next_book_index,len(bible_books)):
+                num_chapters_left = num_chapters_left + len(self.bible_chinese_json[bible_books[i]])
+            num_chapters_left = num_chapters_left + len(self.bible_chinese_json[book]) - int(chapter)
+            return num_chapters_left
+
     def get_scripture_for_today_local_disk(self):
         self.textBrowser_bible.clear()
         cursor = self.textBrowser_bible.textCursor()
@@ -787,14 +780,34 @@ class MyMainWindow(QMainWindow):
         in_new_testimony = (self.days_elapsed*self.spinBox_old.value()+self.spinBox_more_old.value()-self.old_testimony)>=0
         speed_all = [self.spinBox_old.value(),self.spinBox_new.value()][int(in_new_testimony)]
         offset_all = [self.spinBox_more_old.value(),self.spinBox_more_new.value()][int(in_new_testimony)]
-        hit_books,hit_chapters = get_book_chapters(days_elapsed =self.days_elapsed, speed = speed_all, offset = offset_all, plan_type = 'all')
+        hit_books,hit_chapters = self.get_book_chapters(days_elapsed =self.days_elapsed, speed = speed_all, offset = offset_all, plan_type = 'all')
+        num_days_left_all = int(self.get_num_chapters_left(hit_books[-1],hit_chapters[-1],'all')/speed_all)
         #setup for the other mode, ie reading chapters from old testimony and new testimony at the same time
-        hit_books_new,hit_chapters_new = get_book_chapters(days_elapsed =self.days_elapsed, speed = self.spinBox_new.value(), offset = self.spinBox_more_new.value(), plan_type = 'new')
+        hit_books_new,hit_chapters_new = self.get_book_chapters(days_elapsed =self.days_elapsed, speed = self.spinBox_new.value(), offset = self.spinBox_more_new.value(), plan_type = 'new')
+        hit_chapters_new = [str(each) for each in hit_chapters_new]
         if len(hit_books_new)==0:#if we finish reading the new testimony
             extra_offset = self.days_elapsed*self.spinBox_new.value()+self.spinBox_more_new.value() - (self.total_chapter-self.old_testimony)
-            hit_books_old,hit_chapters_old = get_book_chapters(days_elapsed =self.days_elapsed, speed = self.spinBox_old.value()+self.spinBox_new.value(), offset = self.spinBox_more_old.value()+extra_offset, plan_type = 'old')
+            # print("extra offset",extra_offset)
+            num_chapters_left_new = 0
+            hit_books_old,hit_chapters_old = self.get_book_chapters(days_elapsed =self.days_elapsed, speed = self.spinBox_old.value(), offset = self.spinBox_more_old.value()+extra_offset, plan_type = 'old')
         else:
-            hit_books_old,hit_chapters_old = get_book_chapters(days_elapsed =self.days_elapsed, speed = self.spinBox_old.value(), offset = self.spinBox_more_old.value(), plan_type = 'old')
+            num_chapters_left_new = self.get_num_chapters_left(hit_books_new[-1],hit_chapters_new[-1],'new')
+            hit_books_old,hit_chapters_old = self.get_book_chapters(days_elapsed =self.days_elapsed, speed = self.spinBox_old.value(), offset = self.spinBox_more_old.value(), plan_type = 'old')
+        if len(hit_books_old)==0:
+            num_chapters_left_old = 0
+        else:
+            num_chapters_left_old = self.get_num_chapters_left(hit_books_old[-1],hit_chapters_old[-1],'old')
+        print(num_chapters_left_new,num_chapters_left_old)
+        num_days_left_all_together = int((num_chapters_left_old+num_chapters_left_new)/(self.spinBox_old.value()+self.spinBox_new.value()))
+
+        #update reading status now
+        if self.checkBox_order.isChecked():
+            self.lineEdit_count_down.setText(str(num_days_left_all))
+            self.progressBar.setValue(100*(1-num_days_left_all/(self.days_elapsed+num_days_left_all)))
+        else:
+            self.lineEdit_count_down.setText(str(num_days_left_all_together))
+            self.progressBar.setValue(100*(1-num_days_left_all_together/(self.days_elapsed+num_days_left_all_together)))
+
         old_testimony_content_cn = []
         new_testimony_content_cn = []
         old_testimony_content_eng = []
@@ -1048,10 +1061,10 @@ class MyMainWindow(QMainWindow):
         start_year = int(datetime.date.today().year)
         start = datetime.date(start_year, start_month, start_date)
         self.days_elapsed  = (datetime.date.today()-start).days
-        count_down =  int(self.total_chapter/(int(self.spinBox_old.value())+int(self.spinBox_new.value()))) - (datetime.date.today()-start).days
-        self.lineEdit_count_down.setText(str(count_down))
-        total_days = self.total_chapter/(int(self.spinBox_old.value())+int(self.spinBox_new.value()))
-        self.progressBar.setValue(100*(1-count_down/total_days))
+        #count_down =  int(self.total_chapter/(int(self.spinBox_old.value())+int(self.spinBox_new.value()))) - (datetime.date.today()-start).days
+        #self.lineEdit_count_down.setText(str(count_down))
+        #total_days = self.total_chapter/(int(self.spinBox_old.value())+int(self.spinBox_new.value()))
+        #self.progressBar.setValue(100*(1-count_down/total_days))
 
     def update_count_down_time_2(self):
         start_month = int(self.spinBox_start_month.value())
