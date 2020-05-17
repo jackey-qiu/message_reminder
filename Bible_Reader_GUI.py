@@ -381,6 +381,9 @@ class MyMainWindow(QMainWindow):
                         """QPlainTextEdit {background-color: #FFFFFF;
                            color: #3300CC;}""")
 
+        self.plainTextEdit_scripture_explain.setStyleSheet(
+                        """QPlainTextEdit {background-color: #FFFFFF;
+                           color: #6600CC;}""")
         self.setWindowTitle('Bible Reader')
         sock = urllib.request.urlopen("http://mobile.chinesebibleonline.com/bible")  
         self.html_overview = etree.HTML(sock.read())
@@ -417,10 +420,13 @@ class MyMainWindow(QMainWindow):
         self.comboBox_book.addItems(bible_books)
         # self.update_reading_plan()
         self.update_count_down_time()
-        self.get_spring_desert_article()
+        try:
+            self.get_spring_desert_article()
+        except:
+            pass
         # self.load_extra_chapter_number()
         self.check_read_or_not()
-
+        self.get_scripture_for_today_local_disk()
         #signal-slot-pair connection
         self.calendarWidget.selectionChanged.connect(self.get_spring_desert_article)
         self.pushButton_today.clicked.connect(self.update_count_down_time_today)
@@ -445,10 +451,49 @@ class MyMainWindow(QMainWindow):
         # self.spinBox_more_new.valueChanged.connect(self.update_extra_chapter_number)
         # self.spinBox_more_old.valueChanged.connect(self.update_extra_chapter_number)
         self.comboBox_book.currentIndexChanged.connect(self.set_bible_book)
+        self.comboBox_book_chapter.currentIndexChanged.connect(self.set_book_chapter)
+        # self.comboBox_book_chapter.view().pressed.connect(self.set_book_chapter)
         # self.comboBox_plan.currentIndexChanged.connect(self.update_reading_plan)
         self.comboBox_bible_version.currentIndexChanged.connect(self.update_bible_version)
         self.pushButton_show_notes.clicked.connect(self.show_note_panel)
         self.pushButton_hide_notes.clicked.connect(self.hide_note_panel)
+        self.pushButton_load_json.clicked.connect(self.load_json)
+        self.pushButton_next_chapter.clicked.connect(self.go_to_next_chapter)
+        self.pushButton_last_chapter.clicked.connect(self.go_to_last_chapter)
+
+    def load_json(self):
+        options = QFileDialog.Options()
+        options |= QFileDialog.DontUseNativeDialog
+        fileName, _ = QFileDialog.getOpenFileName(self,"QFileDialog.getOpenFileName()", "","Data Files (*.json)", options=options)
+        if fileName:
+            self.scripture_explain_file_name = fileName
+            with open(fileName,'r') as f:
+                self.scripture_explain = json.load(f)
+            self.lineEdit_book_title.setText(fileName)
+            self.comboBox_book_chapter.clear()
+            self.comboBox_book_chapter.addItems(list(self.scripture_explain.keys()))
+
+    def set_book_chapter(self):
+        current_text = self.comboBox_book_chapter.currentText()
+        if current_text!='':
+            self.plainTextEdit_scripture_explain.setPlainText(self.scripture_explain[current_text])
+
+    def go_to_next_chapter(self):
+        current_index = self.comboBox_book_chapter.currentIndex()
+        total_items = self.comboBox_book_chapter.count()
+        if current_index==(total_items-1):
+            pass
+        else:
+            self.comboBox_book_chapter.setCurrentIndex(current_index+1)
+            self.set_book_chapter()
+
+    def go_to_last_chapter(self):
+        current_index = self.comboBox_book_chapter.currentIndex()
+        if current_index==0:
+            pass
+        else:
+            self.comboBox_book_chapter.setCurrentIndex(current_index-1)
+            self.set_book_chapter()
 
     def show_note_panel(self):
         self.widget_notes.show()
